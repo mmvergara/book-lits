@@ -8,6 +8,8 @@ import Providers from "../Providers.tsx";
 import ProtectedPage from "../pages/protected/ProtectedPage.tsx";
 import BooksPage from "../pages/books/BooksPage.tsx";
 import PublishersPage from "../pages/publishers/PublishersPage.tsx";
+import BookPage from "../pages/books/[bookid]/BookPage.tsx";
+import PublisherPage from "../pages/publishers/[publisherid]/PublisherPage.tsx";
 
 const router = createBrowserRouter([
   // I recommend you reflect the routes here in the pages folder
@@ -42,8 +44,16 @@ const router = createBrowserRouter([
             element: <BooksPage />,
           },
           {
+            path: "/books/:bookid",
+            element: <BookPage />,
+          },
+          {
             path: "/publishers",
             element: <PublishersPage />,
+          },
+          {
+            path: "/publishers/:publisherid",
+            element: <PublisherPage />,
           },
         ],
       },

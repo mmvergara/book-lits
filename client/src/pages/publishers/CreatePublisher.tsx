@@ -13,8 +13,7 @@ const CREATE_PUBLISHER = gql`
 const CreatePublisher = () => {
   const { user } = useUser();
   const [publisher, setPublisher] = useState("");
-  const [createPublisher, { loading, data, error }] =
-    useMutation(CREATE_PUBLISHER);
+  const [createPublisher, { loading, data }] = useMutation(CREATE_PUBLISHER);
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 

@@ -2,8 +2,29 @@
 
 package model
 
+type CreateBookInput struct {
+	Name        string `json:"name"`
+	AuthorID    string `json:"authorId"`
+	PublisherID string `json:"publisherId"`
+}
+
+type CreatePublisherInput struct {
+	Name    string `json:"name"`
+	OwnerID string `json:"ownerId"`
+}
+
 type Mutation struct {
 }
 
 type Query struct {
+}
+
+type UpdateBookInput struct {
+	Name        *string `json:"name,omitempty"`
+	AuthorID    *string `json:"authorId,omitempty"`
+	PublisherID *string `json:"publisherId,omitempty"`
+}
+
+type UpdatePublisherInput struct {
+	Name *string `json:"name,omitempty"`
 }

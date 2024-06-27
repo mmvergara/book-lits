@@ -7,24 +7,27 @@ interface BookCardProps {
   created_at: string;
   authorName: string;
 }
-const BookCard = ({
-  id,
-  name,
-  publisher,
-  created_at,
-  authorName,
-}: BookCardProps) => {
+const BookCard = (book: BookCardProps) => {
   return (
-    <article className="card">
-      <h2>{name}</h2>
-      <span>{new Date(created_at).toLocaleString()}</span>
-      <p>{publisher}</p>
-      <p>{authorName}</p>
-
-      <Link className="btn" to={`/books/${id}`}>
-        View Details
+    <Link
+      to={`/books/${book.id}`}
+      key={book.id}
+      className="flex flex-col gap-2 bg-zinc-700 p-4 rounded-md max-w-[350px] w-full hover:bg-zinc-600"
+    >
+      <h2 className="text-xl">📗{book.name}</h2>
+      <Link
+        to={`/books/${book.id}`}
+        className="text-xs z-10 hover:bg-zinc-500 p-1 px-2 rounded-sm"
+      >
+        <span className="font-semibold">Author:</span> {book.authorName}
       </Link>
-    </article>
+      <Link
+        to={`/publishers/${book.publisher}`}
+        className="text-xs z-10 hover:bg-zinc-500 p-1 px-2 rounded-sm"
+      >
+        <span className="font-semibold">Publisher:</span> {book.publisher}
+      </Link>
+    </Link>
   );
 };
 

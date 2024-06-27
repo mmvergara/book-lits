@@ -1,53 +1,69 @@
-# GraphQL schema example
-#
-# https://gqlgen.com/getting-started/
-
-scalar Date
+scalar DateTime
 
 type User {
   id: ID!
-  username: String!
-  created_at: Date!
-
-  books: [Book!]!
-  publishers: [Publisher!]!
-}
-
-type Book {
-  id: ID!
   name: String!
-  publisher: Publisher!
-  author: User!
-  created_at: Date!
+  # Add other relevant user fields (e.g., email, role)
+  createdAt: DateTime!
 }
 
 type Publisher {
   id: ID!
   name: String!
-  created_at: Date!
-  owner: User!
+  createdAt: DateTime!
 
+  ownerId: ID!
+  owner: User!
   books: [Book!]!
+}
+
+type Book {
+  id: ID!
+  name: String!
+  createdAt: DateTime!
+
+  author: User!
+  publisher: Publisher!
 }
 
 type Query {
-  books: [Book!]!
-  book(id: ID!): Book!
+  users: [User!]!
+  user(id: ID!): User
 
   publishers: [Publisher!]!
-  publisher(id: ID!): Publisher!
+  publisher(id: ID!): Publisher
 
-  users: [User!]!
-  user(id: ID!): User!
+  books: [Book!]!
+  book(id: ID!): Book
 }
 
 type Mutation {
-  createBook(name: String!, publisher_id: ID!, author_id: ID!): Book!
-  updateBookName(id: ID!, newBookName: String!): Book!
-  deleteBook(id: ID!): Book!
-
-  createPublisher(name: String!, owner_id: ID!): Publisher!
+  createPublisher(data: CreatePublisherInput!): Publisher!
+  updatePublisher(id: ID!, data: UpdatePublisherInput!): Publisher!
   deletePublisher(id: ID!): Publisher!
 
-  updateUsername(id: ID!, username: String!, password: String!): User!
+  createBook(data: CreateBookInput!): Book!
+  updateBook(id: ID!, data: UpdateBookInput!): Book!
+  deleteBook(id: ID!): Book!
+}
+
+input CreatePublisherInput {
+  name: String!
+  ownerId: ID!
+}
+
+input UpdatePublisherInput {
+  name: String
+}
+
+input CreateBookInput {
+  name: String!
+  authorId: ID!
+  publisherId: ID!
+}
+
+input UpdateBookInput {
+  name: String
+  authorId: ID
+  publisherId: ID
 }

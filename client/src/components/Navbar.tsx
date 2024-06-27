@@ -1,27 +1,21 @@
+import { Link } from "react-router-dom";
+
 const Navbar = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       <div className="navbar bg-base-100">
         <div className="flex-1">
-          <a className="btn btn-ghost text-xl">daisyUI</a>
+          <Link to="/" className="btn btn-ghost text-xl">
+            BooklIts
+          </Link>
         </div>
         <div className="flex-none">
           <ul className="menu menu-horizontal px-1">
             <li>
-              <a>Link</a>
+              <Link to="/books">Books</Link>
             </li>
             <li>
-              <details>
-                <summary>Parent</summary>
-                <ul className="bg-base-100 rounded-t-none p-2">
-                  <li>
-                    <a>Link 1</a>
-                  </li>
-                  <li>
-                    <a>Link 2</a>
-                  </li>
-                </ul>
-              </details>
+              <Link to="/publishers">Publishers</Link>
             </li>
           </ul>
         </div>

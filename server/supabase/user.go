@@ -63,6 +63,19 @@ func (sp *Supabase) GetUserByName(username string) (model.User, error) {
 	return results[0], nil
 }
 
+// get all users
+func (sp *Supabase) GetUsers() ([]*model.User, error) {
+	var results = []*model.User{}
+	err := sp.Client.DB.From("users").Select("*").Execute(&results)
+	if err != nil {
+		log.Println("Error getting users")
+		log.Println(err)
+		return nil, err
+	}
+
+	return results, nil
+}
+
 func (sp *Supabase) GetUserById(userID uuid.UUID) (model.User, error) {
 	var results = []model.User{}
 	err := sp.Client.DB.From("users").Select("*").Eq("id", userID.String()).Execute(&results)
@@ -72,6 +85,6 @@ func (sp *Supabase) GetUserById(userID uuid.UUID) (model.User, error) {
 	if len(results) == 0 {
 		return model.User{}, fmt.Errorf("could not find user")
 	}
-	log.Println(results[0].UserID)
+	log.Println(results[0].ID)
 	return results[0], nil
 }

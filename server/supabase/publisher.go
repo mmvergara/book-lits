@@ -60,3 +60,14 @@ func (sp *Supabase) GetPublisherById(publisherID uuid.UUID) (model.Publisher, er
 
 	return results[0], nil
 }
+
+// get publisher by owner id
+func (sp *Supabase) GetPublishersByOwnerID(ownerID uuid.UUID) ([]*model.Publisher, error) {
+	var results = []*model.Publisher{}
+	err := sp.Client.DB.From("publishers").Select("*").Eq("owner", ownerID.String()).Execute(&results)
+	if err != nil {
+		return []*model.Publisher{}, err
+	}
+
+	return results, nil
+}

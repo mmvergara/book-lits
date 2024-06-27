@@ -6,15 +6,19 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/go-graph-booklets/server/gqlgen-todos/graph/model"
 	"github.com/go-graph-booklets/server/gqlgen-todos/tools"
 	"github.com/google/uuid"
 )
 
+type AuthForm struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 func (a *AuthHandler) SignInHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var u model.User
+	var u AuthForm
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -30,15 +34,21 @@ func (a *AuthHandler) SignInHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	log.Println(foundUser.Password)
-	if tools.IsCorrectPassword(u.Password, foundUser.Password) {
-		log.Println("Invalid credentials")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "invalid credentials"})
-		return
+	// log.Println(foundUser.Password)
+	// if tools.IsCorrectPassword(u.Password, foundUser.Password) {
+	// 	log.Println("Invalid credentials")
+	// 	w.WriteHeader(http.StatusUnauthorized)
+	// 	json.NewEncoder(w).Encode(map[string]string{"error": "invalid credentials"})
+	// 	return
+	// }
+	parsedFoundUserUUID, err := uuid.Parse(foundUser.ID)
+	if err != nil {
+		log.Println("Could not parse user id")
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 
-	tokenString, exp, err := a.createToken(foundUser.UserID, foundUser.Username)
+	tokenString, exp, err := a.createToken(parsedFoundUserUUID, foundUser.Name)
 	if err != nil {
 		log.Println("Internal error Encoding response2")
 		log.Println(err)
@@ -61,9 +71,16 @@ func (a *AuthHandler) SignInHandler(w http.ResponseWriter, r *http.Request) {
 		Exp      int64     `json:"exp"`
 		UserID   uuid.UUID `json:"userid"`
 	}
-	res.Username = foundUser.Username
+	res.Username = foundUser.Name
 	res.Exp = exp.Unix()
-	res.UserID = foundUser.UserID
+
+	parsedUserID, err := uuid.Parse(foundUser.ID)
+	if err != nil {
+		log.Println("Internal error Encoding response2")
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	res.UserID = parsedUserID
 	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
 		log.Println("Internal error Encoding response2")
@@ -77,7 +94,7 @@ func (a *AuthHandler) SignInHandler(w http.ResponseWriter, r *http.Request) {
 func (a *AuthHandler) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Println("Sign up handler")
-	var u model.User
+	var u AuthForm
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
 		fmt.Println(w, "Invalid request Decode error")

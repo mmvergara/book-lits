@@ -10,12 +10,16 @@ import (
 
 // create book
 func (sp *Supabase) CreateBook(name string, publisherID uuid.UUID, authorID uuid.UUID) (model.Book, error) {
-	book := model.Book{
+	book := &struct {
+		Name        string `json:"name"`
+		PublisherID string `json:"publisher"`
+		AuthorID    string `json:"author"`
+	}{
 		Name:        name,
-		PublisherID: publisherID,
-		AuthorID:    authorID,
+		PublisherID: publisherID.String(),
+		AuthorID:    authorID.String(),
 	}
-
+	log.Println("New book: ", book)
 	var results = []model.Book{}
 	err := sp.Client.DB.From("books").Insert(book).Execute(&results)
 	if err != nil {
@@ -86,7 +90,7 @@ func (sp *Supabase) GetBooks() ([]*model.Book, error) {
 // get books by publisher id
 func (sp *Supabase) GetBooksByPublisherID(publisherID uuid.UUID) ([]*model.Book, error) {
 	var results = []*model.Book{}
-	err := sp.Client.DB.From("books").Select("*").Eq("publisher_id", publisherID.String()).Execute(&results)
+	err := sp.Client.DB.From("books").Select("*").Eq("publisher", publisherID.String()).Execute(&results)
 	if err != nil {
 		log.Println("Error getting books by publisher id")
 		log.Println(err)
