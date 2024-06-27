@@ -60,11 +60,9 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		CreateBook      func(childComplexity int, name string, publisherID string, authorID string) int
-		CreatePublisher func(childComplexity int, name string) int
-		CreateUser      func(childComplexity int, username string, password string) int
+		CreatePublisher func(childComplexity int, name string, ownerID string) int
 		DeleteBook      func(childComplexity int, id string) int
 		DeletePublisher func(childComplexity int, id string) int
-		DeleteUser      func(childComplexity int, id string) int
 		UpdateBookName  func(childComplexity int, id string, newBookName string) int
 		UpdateUsername  func(childComplexity int, id string, username string, password string) int
 	}
@@ -74,6 +72,7 @@ type ComplexityRoot struct {
 		CreatedAt func(childComplexity int) int
 		ID        func(childComplexity int) int
 		Name      func(childComplexity int) int
+		Owner     func(childComplexity int) int
 	}
 
 	Query struct {
@@ -86,11 +85,11 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
-		Books     func(childComplexity int) int
-		CreatedAt func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Password  func(childComplexity int) int
-		Username  func(childComplexity int) int
+		Books      func(childComplexity int) int
+		CreatedAt  func(childComplexity int) int
+		ID         func(childComplexity int) int
+		Publishers func(childComplexity int) int
+		Username   func(childComplexity int) int
 	}
 }
 
@@ -103,16 +102,15 @@ type MutationResolver interface {
 	CreateBook(ctx context.Context, name string, publisherID string, authorID string) (*model.Book, error)
 	UpdateBookName(ctx context.Context, id string, newBookName string) (*model.Book, error)
 	DeleteBook(ctx context.Context, id string) (*model.Book, error)
-	CreatePublisher(ctx context.Context, name string) (*model.Publisher, error)
+	CreatePublisher(ctx context.Context, name string, ownerID string) (*model.Publisher, error)
 	DeletePublisher(ctx context.Context, id string) (*model.Publisher, error)
-	CreateUser(ctx context.Context, username string, password string) (*model.User, error)
 	UpdateUsername(ctx context.Context, id string, username string, password string) (*model.User, error)
-	DeleteUser(ctx context.Context, id string) (*model.User, error)
 }
 type PublisherResolver interface {
 	ID(ctx context.Context, obj *model.Publisher) (string, error)
 
 	CreatedAt(ctx context.Context, obj *model.Publisher) (string, error)
+	Owner(ctx context.Context, obj *model.Publisher) (*model.User, error)
 	Books(ctx context.Context, obj *model.Publisher) ([]*model.Book, error)
 }
 type QueryResolver interface {
@@ -128,6 +126,7 @@ type UserResolver interface {
 
 	CreatedAt(ctx context.Context, obj *model.User) (string, error)
 	Books(ctx context.Context, obj *model.User) ([]*model.Book, error)
+	Publishers(ctx context.Context, obj *model.User) ([]*model.Publisher, error)
 }
 
 type executableSchema struct {
@@ -206,19 +205,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreatePublisher(childComplexity, args["name"].(string)), true
-
-	case "Mutation.createUser":
-		if e.complexity.Mutation.CreateUser == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_createUser_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CreateUser(childComplexity, args["username"].(string), args["password"].(string)), true
+		return e.complexity.Mutation.CreatePublisher(childComplexity, args["name"].(string), args["owner_id"].(string)), true
 
 	case "Mutation.deleteBook":
 		if e.complexity.Mutation.DeleteBook == nil {
@@ -243,18 +230,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeletePublisher(childComplexity, args["id"].(string)), true
-
-	case "Mutation.deleteUser":
-		if e.complexity.Mutation.DeleteUser == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_deleteUser_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.DeleteUser(childComplexity, args["id"].(string)), true
 
 	case "Mutation.updateBookName":
 		if e.complexity.Mutation.UpdateBookName == nil {
@@ -307,6 +282,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Publisher.Name(childComplexity), true
+
+	case "Publisher.owner":
+		if e.complexity.Publisher.Owner == nil {
+			break
+		}
+
+		return e.complexity.Publisher.Owner(childComplexity), true
 
 	case "Query.book":
 		if e.complexity.Query.Book == nil {
@@ -386,12 +368,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.ID(childComplexity), true
 
-	case "User.password":
-		if e.complexity.User.Password == nil {
+	case "User.publishers":
+		if e.complexity.User.Publishers == nil {
 			break
 		}
 
-		return e.complexity.User.Password(childComplexity), true
+		return e.complexity.User.Publishers(childComplexity), true
 
 	case "User.username":
 		if e.complexity.User.Username == nil {
@@ -568,30 +550,15 @@ func (ec *executionContext) field_Mutation_createPublisher_args(ctx context.Cont
 		}
 	}
 	args["name"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["username"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["username"] = arg0
 	var arg1 string
-	if tmp, ok := rawArgs["password"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+	if tmp, ok := rawArgs["owner_id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("owner_id"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["password"] = arg1
+	args["owner_id"] = arg1
 	return args, nil
 }
 
@@ -611,21 +578,6 @@ func (ec *executionContext) field_Mutation_deleteBook_args(ctx context.Context, 
 }
 
 func (ec *executionContext) field_Mutation_deletePublisher_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -928,6 +880,8 @@ func (ec *executionContext) fieldContext_Book_publisher(_ context.Context, field
 				return ec.fieldContext_Publisher_name(ctx, field)
 			case "created_at":
 				return ec.fieldContext_Publisher_created_at(ctx, field)
+			case "owner":
+				return ec.fieldContext_Publisher_owner(ctx, field)
 			case "books":
 				return ec.fieldContext_Publisher_books(ctx, field)
 			}
@@ -980,12 +934,12 @@ func (ec *executionContext) fieldContext_Book_author(_ context.Context, field gr
 				return ec.fieldContext_User_id(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
-			case "password":
-				return ec.fieldContext_User_password(ctx, field)
 			case "created_at":
 				return ec.fieldContext_User_created_at(ctx, field)
 			case "books":
 				return ec.fieldContext_User_books(ctx, field)
+			case "publishers":
+				return ec.fieldContext_User_publishers(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -1252,7 +1206,7 @@ func (ec *executionContext) _Mutation_createPublisher(ctx context.Context, field
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreatePublisher(rctx, fc.Args["name"].(string))
+		return ec.resolvers.Mutation().CreatePublisher(rctx, fc.Args["name"].(string), fc.Args["owner_id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1283,6 +1237,8 @@ func (ec *executionContext) fieldContext_Mutation_createPublisher(ctx context.Co
 				return ec.fieldContext_Publisher_name(ctx, field)
 			case "created_at":
 				return ec.fieldContext_Publisher_created_at(ctx, field)
+			case "owner":
+				return ec.fieldContext_Publisher_owner(ctx, field)
 			case "books":
 				return ec.fieldContext_Publisher_books(ctx, field)
 			}
@@ -1348,6 +1304,8 @@ func (ec *executionContext) fieldContext_Mutation_deletePublisher(ctx context.Co
 				return ec.fieldContext_Publisher_name(ctx, field)
 			case "created_at":
 				return ec.fieldContext_Publisher_created_at(ctx, field)
+			case "owner":
+				return ec.fieldContext_Publisher_owner(ctx, field)
 			case "books":
 				return ec.fieldContext_Publisher_books(ctx, field)
 			}
@@ -1362,73 +1320,6 @@ func (ec *executionContext) fieldContext_Mutation_deletePublisher(ctx context.Co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_deletePublisher_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createUser(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateUser(rctx, fc.Args["username"].(string), fc.Args["password"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.User)
-	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋgoᚑgraphᚑbookletsᚋserverᚋgqlgenᚑtodosᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "username":
-				return ec.fieldContext_User_username(ctx, field)
-			case "password":
-				return ec.fieldContext_User_password(ctx, field)
-			case "created_at":
-				return ec.fieldContext_User_created_at(ctx, field)
-			case "books":
-				return ec.fieldContext_User_books(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -1478,12 +1369,12 @@ func (ec *executionContext) fieldContext_Mutation_updateUsername(ctx context.Con
 				return ec.fieldContext_User_id(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
-			case "password":
-				return ec.fieldContext_User_password(ctx, field)
 			case "created_at":
 				return ec.fieldContext_User_created_at(ctx, field)
 			case "books":
 				return ec.fieldContext_User_books(ctx, field)
+			case "publishers":
+				return ec.fieldContext_User_publishers(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -1496,73 +1387,6 @@ func (ec *executionContext) fieldContext_Mutation_updateUsername(ctx context.Con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_updateUsername_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_deleteUser(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteUser(rctx, fc.Args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.User)
-	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋgoᚑgraphᚑbookletsᚋserverᚋgqlgenᚑtodosᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_deleteUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "username":
-				return ec.fieldContext_User_username(ctx, field)
-			case "password":
-				return ec.fieldContext_User_password(ctx, field)
-			case "created_at":
-				return ec.fieldContext_User_created_at(ctx, field)
-			case "books":
-				return ec.fieldContext_User_books(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deleteUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -1696,6 +1520,62 @@ func (ec *executionContext) fieldContext_Publisher_created_at(_ context.Context,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Date does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Publisher_owner(ctx context.Context, field graphql.CollectedField, obj *model.Publisher) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Publisher_owner(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Publisher().Owner(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖgithubᚗcomᚋgoᚑgraphᚑbookletsᚋserverᚋgqlgenᚑtodosᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Publisher_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Publisher",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "username":
+				return ec.fieldContext_User_username(ctx, field)
+			case "created_at":
+				return ec.fieldContext_User_created_at(ctx, field)
+			case "books":
+				return ec.fieldContext_User_books(ctx, field)
+			case "publishers":
+				return ec.fieldContext_User_publishers(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
 	}
 	return fc, nil
@@ -1925,6 +1805,8 @@ func (ec *executionContext) fieldContext_Query_publishers(_ context.Context, fie
 				return ec.fieldContext_Publisher_name(ctx, field)
 			case "created_at":
 				return ec.fieldContext_Publisher_created_at(ctx, field)
+			case "owner":
+				return ec.fieldContext_Publisher_owner(ctx, field)
 			case "books":
 				return ec.fieldContext_Publisher_books(ctx, field)
 			}
@@ -1979,6 +1861,8 @@ func (ec *executionContext) fieldContext_Query_publisher(ctx context.Context, fi
 				return ec.fieldContext_Publisher_name(ctx, field)
 			case "created_at":
 				return ec.fieldContext_Publisher_created_at(ctx, field)
+			case "owner":
+				return ec.fieldContext_Publisher_owner(ctx, field)
 			case "books":
 				return ec.fieldContext_Publisher_books(ctx, field)
 			}
@@ -2042,12 +1926,12 @@ func (ec *executionContext) fieldContext_Query_users(_ context.Context, field gr
 				return ec.fieldContext_User_id(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
-			case "password":
-				return ec.fieldContext_User_password(ctx, field)
 			case "created_at":
 				return ec.fieldContext_User_created_at(ctx, field)
 			case "books":
 				return ec.fieldContext_User_books(ctx, field)
+			case "publishers":
+				return ec.fieldContext_User_publishers(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -2098,12 +1982,12 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_id(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
-			case "password":
-				return ec.fieldContext_User_password(ctx, field)
 			case "created_at":
 				return ec.fieldContext_User_created_at(ctx, field)
 			case "books":
 				return ec.fieldContext_User_books(ctx, field)
+			case "publishers":
+				return ec.fieldContext_User_publishers(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -2339,50 +2223,6 @@ func (ec *executionContext) fieldContext_User_username(_ context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _User_password(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_User_password(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Password, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_User_password(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _User_created_at(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_created_at(ctx, field)
 	if err != nil {
@@ -2478,6 +2318,62 @@ func (ec *executionContext) fieldContext_User_books(_ context.Context, field gra
 				return ec.fieldContext_Book_created_at(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Book", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_publishers(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_publishers(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().Publishers(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Publisher)
+	fc.Result = res
+	return ec.marshalNPublisher2ᚕᚖgithubᚗcomᚋgoᚑgraphᚑbookletsᚋserverᚋgqlgenᚑtodosᚋgraphᚋmodelᚐPublisherᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_publishers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Publisher_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Publisher_name(ctx, field)
+			case "created_at":
+				return ec.fieldContext_Publisher_created_at(ctx, field)
+			case "owner":
+				return ec.fieldContext_Publisher_owner(ctx, field)
+			case "books":
+				return ec.fieldContext_Publisher_books(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Publisher", field.Name)
 		},
 	}
 	return fc, nil
@@ -4439,23 +4335,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "createUser":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createUser(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "updateUsername":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updateUsername(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "deleteUser":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deleteUser(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -4545,6 +4427,42 @@ func (ec *executionContext) _Publisher(ctx context.Context, sel ast.SelectionSet
 					}
 				}()
 				res = ec._Publisher_created_at(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "owner":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Publisher_owner(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -4864,11 +4782,6 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "password":
-			out.Values[i] = ec._User_password(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		case "created_at":
 			field := field
 
@@ -4915,6 +4828,42 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._User_books(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "publishers":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_publishers(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

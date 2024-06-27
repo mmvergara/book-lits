@@ -7,7 +7,9 @@ package graph
 import (
 	"context"
 	"fmt"
+	"log"
 
+	"github.com/go-graph-booklets/server/gqlgen-todos/auth"
 	"github.com/go-graph-booklets/server/gqlgen-todos/graph/model"
 	"github.com/google/uuid"
 )
@@ -61,70 +63,126 @@ func (r *mutationResolver) DeleteBook(ctx context.Context, id string) (*model.Bo
 }
 
 // CreatePublisher is the resolver for the createPublisher field.
-func (r *mutationResolver) CreatePublisher(ctx context.Context, name string) (*model.Publisher, error) {
-	publisher, err := r.Repo.CreatePublisher(name)
-	return &publisher, err
+func (r *mutationResolver) CreatePublisher(ctx context.Context, name string, ownerID string) (*model.Publisher, error) {
+	user := auth.ForContext(ctx)
+	log.Println("User: ", user, "OwnerID: ", ownerID)
+	if ownerID != user.ID.String() {
+		return nil, fmt.Errorf("you can't create a publisher for another user")
+	}
+	log.Println("Creating publisher for user: ", user.Username)
+	newPublisher, err := r.Repo.CreatePublisher(name, user.ID)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	log.Println("Created publisher: ", newPublisher)
+	return &newPublisher, nil
 }
 
 // DeletePublisher is the resolver for the deletePublisher field.
 func (r *mutationResolver) DeletePublisher(ctx context.Context, id string) (*model.Publisher, error) {
+	user := auth.ForContext(ctx)
 	publisherID, err := uuid.Parse(id)
 	if err != nil {
 		return nil, err
+	}
+
+	targetPublisher, err := r.Repo.GetPublisherById(publisherID)
+	if err != nil {
+		return nil, err
+	}
+
+	if targetPublisher.Owner != user.ID {
+		return nil, fmt.Errorf("Unauthorized")
 	}
 
 	deletedPublisher, err := r.Repo.DeletePublisher(publisherID)
 	return &deletedPublisher, err
 }
 
-// CreateUser is the resolver for the createUser field.
-func (r *mutationResolver) CreateUser(ctx context.Context, username string, password string) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: CreateUser - createUser"))
-}
-
 // UpdateUsername is the resolver for the updateUsername field.
 func (r *mutationResolver) UpdateUsername(ctx context.Context, id string, username string, password string) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: UpdateUsername - updateUsername"))
-}
-
-// DeleteUser is the resolver for the deleteUser field.
-func (r *mutationResolver) DeleteUser(ctx context.Context, id string) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: DeleteUser - deleteUser"))
+	panic(fmt.Errorf("not implemented: UpdateUsername - mutation"))
 }
 
 // ID is the resolver for the id field.
 func (r *publisherResolver) ID(ctx context.Context, obj *model.Publisher) (string, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return obj.ID.String(), nil
 }
 
 // CreatedAt is the resolver for the created_at field.
 func (r *publisherResolver) CreatedAt(ctx context.Context, obj *model.Publisher) (string, error) {
-	panic(fmt.Errorf("not implemented: CreatedAt - created_at"))
+	return obj.CreatedAt.UTC().String(), nil
+}
+
+// Owner is the resolver for the owner field.
+func (r *publisherResolver) Owner(ctx context.Context, obj *model.Publisher) (*model.User, error) {
+	owner, err := r.Repo.GetUserById(obj.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	return &owner, nil
 }
 
 // Books is the resolver for the books field.
 func (r *publisherResolver) Books(ctx context.Context, obj *model.Publisher) ([]*model.Book, error) {
-	panic(fmt.Errorf("not implemented: Books - books"))
+	books, err := r.Repo.GetBooksByPublisherID(obj.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return books, nil
 }
 
 // Books is the resolver for the books field.
 func (r *queryResolver) Books(ctx context.Context) ([]*model.Book, error) {
-	panic(fmt.Errorf("not implemented: Books - books"))
+	// get all books
+	books, err := r.Repo.GetBooks()
+	if err != nil {
+		return nil, err
+	}
+	return books, nil
 }
 
 // Book is the resolver for the book field.
 func (r *queryResolver) Book(ctx context.Context, id string) (*model.Book, error) {
-	panic(fmt.Errorf("not implemented: Book - book"))
+	bookID, err := uuid.Parse(id)
+	if err != nil {
+		return nil, err
+	}
+
+	book, err := r.Repo.GetBook(bookID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &book, nil
 }
 
 // Publishers is the resolver for the publishers field.
 func (r *queryResolver) Publishers(ctx context.Context) ([]*model.Publisher, error) {
-	panic(fmt.Errorf("not implemented: Publishers - publishers"))
+	// get all publishers
+	publishers, err := r.Repo.GetPublishers()
+	if err != nil {
+		return nil, err
+	}
+	return publishers, nil
 }
 
 // Publisher is the resolver for the publisher field.
 func (r *queryResolver) Publisher(ctx context.Context, id string) (*model.Publisher, error) {
-	panic(fmt.Errorf("not implemented: Publisher - publisher"))
+	publisherID, err := uuid.Parse(id)
+	if err != nil {
+		return nil, err
+	}
+	publisher, err := r.Repo.GetPublisherById(publisherID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &publisher, nil
 }
 
 // Users is the resolver for the users field.
@@ -150,6 +208,11 @@ func (r *userResolver) CreatedAt(ctx context.Context, obj *model.User) (string, 
 // Books is the resolver for the books field.
 func (r *userResolver) Books(ctx context.Context, obj *model.User) ([]*model.Book, error) {
 	panic(fmt.Errorf("not implemented: Books - books"))
+}
+
+// Publishers is the resolver for the publishers field.
+func (r *userResolver) Publishers(ctx context.Context, obj *model.User) ([]*model.Publisher, error) {
+	panic(fmt.Errorf("not implemented: Publishers - publishers"))
 }
 
 // Book returns BookResolver implementation.

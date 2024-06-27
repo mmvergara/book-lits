@@ -1,19 +1,20 @@
 import { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
-
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { useUser } from "../../context/AuthContext";
 
 const SignUpPage = () => {
+  const navigate = useNavigate();
   // ==============================
   // If user is already logged in, redirect to home
   // // This logic is being repeated in SignIn and SignUp..
-  // const { user } = useUser();
-  // if (user) return <Navigate to="/" />;
+  const { user, signUp } = useUser();
+  if (user) return <Navigate to="/" />;
   // maybe we can create a wrapper component for these pages
   // just like the ./router/AuthProtectedRoute.tsx? up to you.
   // ==============================
 
   const [formValues, setFormValues] = useState({
-    email: "",
+    username: "",
     password: "",
   });
 
@@ -23,24 +24,25 @@ const SignUpPage = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // try {
-    //   await createUserWithEmailAndPassword(
-    //     FirebaseAuth,
-    //     formValues.email,
-    //     formValues.password
-    //   );
-    // } catch (e) {
-    //   const error = e as FirebaseError;
-    //   alert(error.message);
-    // }
+    try {
+      if (signUp) {
+        await signUp(formValues.username, formValues.password);
+        navigate("/auth/sign-in");
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   return (
-    <main>
-      <Link className="home-link" to="/">
+    <main className="flex justify-center items-center flex-col h-[80vh]">
+      <Link className="btn mb-2" to="/">
         ◄ Home
       </Link>
-      <form className="main-container" onSubmit={handleSubmit}>
+      <form
+        className="card flex items-center justify-center flex-col gap-2 bg-black p-12"
+        onSubmit={handleSubmit}
+      >
         <h1 className="header-text">Sign Up</h1>
         <p
           style={{
@@ -49,22 +51,26 @@ const SignUpPage = () => {
             color: "#777",
           }}
         >
-          Demo app, please don't use your real email or password
+          Demo app, please don't use your real username or password
         </p>
         <input
-          name="email"
+          name="username"
           onChange={handleInputChange}
-          type="email"
-          placeholder="Email"
+          type="username"
+          placeholder="username"
+          className="input"
         />
         <input
           name="password"
           onChange={handleInputChange}
           type="password"
           placeholder="Password"
+          className="input"
         />
-        <button type="submit">Create Account</button>
-        <Link className="auth-link" to="/auth/sign-in">
+        <button className="btn" type="submit">
+          Create Account
+        </button>
+        <Link className="btn" to="/auth/sign-in">
           Already have an account? Sign In
         </Link>
       </form>

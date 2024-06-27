@@ -1,17 +1,19 @@
 import { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { useUser } from "../../context/AuthContext";
 
 const SignInPage = () => {
   // ==============================
   // If user is already logged in, redirect to home
   // This logic is being repeated in SignIn and SignUp..
-  // const { user } = useUser();
-  // if (user) return <Navigate to="/" />;
+  const navigate = useNavigate();
+  const { user, signIn } = useUser();
+  if (user) return <Navigate to="/" />;
   // maybe we can create a wrapper component for these pages
   // just like the ./router/AuthProtectedRoute.tsx? up to you.
   // ==============================
   const [formValues, setFormValues] = useState({
-    email: "",
+    username: "",
     password: "",
   });
 
@@ -22,37 +24,42 @@ const SignInPage = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // try {
-    //   await signInWithEmailAndPassword(
-    //     FirebaseAuth,
-    //     formValues.email,
-    //     formValues.password
-    //   );
-    // } catch (error) {
-    //   console.error(error);
-    // }
+    try {
+      if (signIn) {
+        await signIn(formValues.username, formValues.password);
+        navigate("/books");
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
   return (
-    <main>
-      <Link className="home-link" to="/">
+    <main className="flex justify-center items-center flex-col h-[80vh]">
+      <Link className="btn mb-2" to="/">
         ◄ Home
       </Link>
-      <form className="main-container" onSubmit={handleSubmit}>
+      <form
+        className="card flex items-center justify-center flex-col gap-2 bg-black p-12"
+        onSubmit={handleSubmit}
+      >
         <h1 className="header-text">Sign In</h1>
         <input
-          name="email"
+          name="username"
           onChange={handleInputChange}
-          type="email"
-          placeholder="Email"
+          placeholder="username"
+          className="input"
         />
         <input
           name="password"
           onChange={handleInputChange}
           type="password"
           placeholder="Password"
+          className="input"
         />
-        <button type="submit">Login</button>
-        <Link className="auth-link" to="/auth/sign-up">
+        <button type="submit" className="btn">
+          Login
+        </button>
+        <Link className="btn" to="/auth/sign-up">
           Don't have an account? Sign Up
         </Link>
       </form>

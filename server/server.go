@@ -40,15 +40,14 @@ func main() {
 
 	router := chi.NewRouter()
 	router.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedOrigins:   []string{"http://localhost:5173"},
 		AllowCredentials: true,
 		Debug:            false,
 	}))
 
 	// modules
-
 	client := supabase.CreateClient(SUPABASE_URL, SUPABASE_KEY)
-	repo := repo.NewSP(client)
+	repo := repo.NewSupabaseRepo(client)
 	authHandler := auth.NewAuth([]byte(JWT_SECRET), repo)
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{
 		Repo: repo,
@@ -56,9 +55,10 @@ func main() {
 
 	router.Group(func(r chi.Router) {
 		r.Get("/", playground.Handler("GraphQL playground", "/query"))
-		r.Post("/signin", http.HandlerFunc(authHandler.SignInHandler))
-		r.Post("/signup", http.HandlerFunc(authHandler.SignUpHandler))
-		r.Post("/signout", http.HandlerFunc(authHandler.SignOutHandler))
+		r.Post("/auth/signin", http.HandlerFunc(authHandler.SignInHandler))
+		r.Post("/auth/signup", http.HandlerFunc(authHandler.SignUpHandler))
+		r.Post("/auth/signout", http.HandlerFunc(authHandler.SignOutHandler))
+
 	})
 
 	router.Group(func(r chi.Router) {

@@ -2,15 +2,16 @@ package auth
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func (a *AuthHandler) createToken(userid uuid.UUID, username string) (string, time.Time, error) {
 	expires := time.Now().Add(time.Hour * 24)
+	log.Println("From createToken: ", userid, username)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
 			"userid":   userid.String(),
@@ -27,23 +28,30 @@ func (a *AuthHandler) createToken(userid uuid.UUID, username string) (string, ti
 }
 
 // get token claims
-func (a *AuthHandler) getIdAndNameFromToken(token *jwt.Token) (string, string, error) {
+func (a *AuthHandler) getIdAndNameFromToken(token *jwt.Token) (uuid.UUID, string, error) {
 	claims, ok := token.Claims.(jwt.MapClaims)
+	nilUUID := uuid.UUID{}
+
 	if !ok {
-		return "", "", fmt.Errorf("invalid token claims")
+		return nilUUID, "", fmt.Errorf("invalid token claims")
 	}
 
 	userid, ok := claims["userid"].(string)
 	if !ok {
-		return "", "", fmt.Errorf("invalid token claims")
+		return nilUUID, "", fmt.Errorf("invalid token claims")
 	}
 
 	username, ok := claims["username"].(string)
 	if !ok {
-		return "", "", fmt.Errorf("invalid token claims")
+		return nilUUID, "", fmt.Errorf("invalid token claims")
 	}
 
-	return userid, username, nil
+	uid, err := uuid.Parse(userid)
+	if err != nil {
+		return nilUUID, "", fmt.Errorf("invalid token claims")
+	}
+	log.Println("From getIdAndNameFromToken: ", uid, username)
+	return uid, username, nil
 }
 
 func (a *AuthHandler) verifyToken(tokenString string) (*jwt.Token, error) {
@@ -60,14 +68,4 @@ func (a *AuthHandler) verifyToken(tokenString string) (*jwt.Token, error) {
 	}
 
 	return token, nil
-}
-
-func HashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(bytes), err
-}
-
-func CheckPasswordHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
 }

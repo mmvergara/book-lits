@@ -1,6 +1,9 @@
 package graph
 
-import repo "github.com/go-graph-booklets/server/gqlgen-todos/supabase"
+import (
+	repo "github.com/go-graph-booklets/server/gqlgen-todos/supabase"
+)
+
 //go:generate go run github.com/99designs/gqlgen generate
 
 // This file will not be regenerated automatically.

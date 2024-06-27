@@ -3,9 +3,11 @@ package auth
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/go-graph-booklets/server/gqlgen-todos/graph/model"
+	"github.com/go-graph-booklets/server/gqlgen-todos/tools"
 	"github.com/google/uuid"
 )
 
@@ -23,20 +25,23 @@ func (a *AuthHandler) SignInHandler(w http.ResponseWriter, r *http.Request) {
 	// get the userById
 	foundUser, err := a.db.GetUserByName(u.Username)
 	if err != nil {
-		fmt.Println(w, "Internal error")
+		log.Println("Internal error")
+		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	if !CheckPasswordHash(u.Password, foundUser.Password) {
-		fmt.Println("Invalid credentials")
+	log.Println(foundUser.Password)
+	if tools.IsCorrectPassword(u.Password, foundUser.Password) {
+		log.Println("Invalid credentials")
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "invalid credentials"})
 		return
 	}
 
-	tokenString, exp, err := a.createToken(u.UserID, u.Username)
+	tokenString, exp, err := a.createToken(foundUser.UserID, foundUser.Username)
 	if err != nil {
+		log.Println("Internal error Encoding response2")
+		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
@@ -45,20 +50,24 @@ func (a *AuthHandler) SignInHandler(w http.ResponseWriter, r *http.Request) {
 		Value:    tokenString,
 		Expires:  exp,
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   false,
+		Path:     "/",
+		SameSite: http.SameSiteLaxMode,
 	}
+
 	http.SetCookie(w, &httpOnlyCookie)
 	var res struct {
 		Username string    `json:"username"`
 		Exp      int64     `json:"exp"`
-		UserID   uuid.UUID `json:"userId"`
+		UserID   uuid.UUID `json:"userid"`
 	}
-
 	res.Username = foundUser.Username
 	res.Exp = exp.Unix()
 	res.UserID = foundUser.UserID
 	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
+		log.Println("Internal error Encoding response2")
+		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
@@ -77,7 +86,7 @@ func (a *AuthHandler) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// hash password
-	hashedPassword, err := HashPassword(u.Password)
+	hashedPassword, err := tools.HashPassword(u.Password)
 	if err != nil {
 		fmt.Println(w, "Internal error Hashing password")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -85,7 +94,7 @@ func (a *AuthHandler) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create user
-	_, err = a.db.CreateUser(u.Username, hashedPassword)
+	_, err = a.db.CreateUser(u.Username, string(hashedPassword))
 	if err != nil {
 		fmt.Println("Internal error Creating user:", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -97,9 +106,11 @@ func (a *AuthHandler) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 
 func (a *AuthHandler) SignOutHandler(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
-		Name:   "jwt",
-		Value:  "",
-		MaxAge: -1,
+		Name:     "jwt",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   -1,
 	})
 	w.WriteHeader(http.StatusOK)
 }
