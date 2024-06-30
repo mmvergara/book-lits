@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -82,6 +83,18 @@ func (sp *Supabase) GetBooks() ([]*model.Book, error) {
 		log.Println("Error getting books")
 		log.Println(err)
 		return []*model.Book{}, err
+	}
+
+	return results, nil
+}
+
+func (sp *Supabase) GetBooksByIDs(ctx context.Context, IDs []string) ([]*model.Book, []error) {
+	var results = []*model.Book{}
+	err := sp.Client.DB.From("books").Select("*").In("id", IDs).Execute(&results)
+	if err != nil {
+		log.Println("Error getting books by ids")
+		log.Println(err)
+		return []*model.Book{}, []error{err}
 	}
 
 	return results, nil

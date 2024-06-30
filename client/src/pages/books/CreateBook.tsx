@@ -43,7 +43,7 @@ const CreateBook = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    try {   
+    try {
       console.log({
         variables: {
           name: bookName,
@@ -70,32 +70,33 @@ const CreateBook = () => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-2 bg-zinc-700 p-4 rounded-sm max-w-[350px] w-full"
+      className="flex flex-col gap-4 bg-zinc-800 p-6 rounded-lg shadow-md max-w-[350px] w-full"
     >
       <input
         type="text"
-        className="input"
+        className="bg-zinc-700 text-zinc-100 border border-zinc-600 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all duration-300"
         placeholder="Book Name"
         value={bookName}
         onChange={(e) => setBookName(e.target.value)}
       />
       <select
-        className="select select-bordered w-full max-w-xs"
+        className="bg-zinc-700 text-zinc-100 border border-zinc-600 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all duration-300"
         value={selectedPublisher}
         onChange={(e) => setSelectedPublisher(e.target.value)}
       >
-        {data.publishers.map((publisher: any) => (
-          <option key={publisher.id} value={publisher.id}>
-            {publisher.name}
-          </option>
-        ))}{" "}
+        <option value="" disabled>
+          Select a publisher
+        </option>
         {data.publishers.map((publisher: any) => (
           <option key={publisher.id} value={publisher.id}>
             {publisher.name}
           </option>
         ))}
       </select>
-      <button type="submit" className="btn">
+      <button
+        type="submit"
+        className="bg-purple-500 text-white font-semibold py-3 px-4 rounded-md hover:bg-purple-600 transition-colors duration-300"
+      >
         Create Book
       </button>
     </form>

@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -72,11 +73,22 @@ func (sp *Supabase) GetUsers() ([]*model.User, error) {
 		log.Println(err)
 		return nil, err
 	}
-
 	return results, nil
 }
 
-func (sp *Supabase) GetUserById(userID uuid.UUID) (model.User, error) {
+func (sp *Supabase) GetUsersByIDs(ctx context.Context, userIDs []string) ([]*model.User, []error) {
+	var results = []*model.User{}
+
+	err := sp.Client.DB.From("users").Select("*").In("id", userIDs).Execute(&results)
+	if err != nil {
+		log.Println("Error getting users by ids")
+		log.Println(err)
+		return nil, []error{}
+	}
+	return results, nil
+}
+
+func (sp *Supabase) GetUserByID(userID uuid.UUID) (model.User, error) {
 	var results = []model.User{}
 	err := sp.Client.DB.From("users").Select("*").Eq("id", userID.String()).Execute(&results)
 	if err != nil {

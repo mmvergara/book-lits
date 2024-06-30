@@ -9,8 +9,9 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
-	"github.com/go-graph-booklets/server/gqlgen-todos/auth"
 	"github.com/go-graph-booklets/server/gqlgen-todos/graph"
+	"github.com/go-graph-booklets/server/gqlgen-todos/services/auth"
+	"github.com/go-graph-booklets/server/gqlgen-todos/services/loaders"
 	repo "github.com/go-graph-booklets/server/gqlgen-todos/supabase"
 	"github.com/joho/godotenv"
 	"github.com/nedpals/supabase-go"
@@ -23,19 +24,19 @@ func main() {
 	PORT := os.Getenv("PORT")
 	SUPABASE_URL := os.Getenv("SUPABASE_URL")
 	SUPABASE_KEY := os.Getenv("SUPABASE_KEY")
-	JWT_SECRET := []byte(os.Getenv("JWT_SECRET"))
+	JWT_SECRET := []byte(os.Getenv("SUPABASE_JWT_SECRET"))
 
 	if PORT == "" {
 		PORT = defaultPort
 	}
 	if SUPABASE_URL == "" {
-		log.Fatal("SUPABASE_URL is required")
+		log.Fatal("SUPABASE_URL is missing in environment variables")
 	}
 	if SUPABASE_KEY == "" {
-		log.Fatal("SUPABASE_KEY is required")
+		log.Fatal("SUPABASE_KEY is missing in environment variables")
 	}
 	if JWT_SECRET == nil {
-		log.Fatal("JWT_SECRET is required")
+		log.Fatal("SUPABASE_JJWT_SECRET is missing in environment variables")
 	}
 
 	router := chi.NewRouter()
@@ -49,6 +50,7 @@ func main() {
 	client := supabase.CreateClient(SUPABASE_URL, SUPABASE_KEY)
 	repo := repo.NewSupabaseRepo(client)
 	authHandler := auth.NewAuth([]byte(JWT_SECRET), repo)
+	loader := loaders.NewLoaders(repo)
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{
 		Repo: repo,
 	}}))
@@ -63,6 +65,7 @@ func main() {
 
 	router.Group(func(r chi.Router) {
 		r.Use(authHandler.Middleware())
+		r.Use(loader.Middleware())
 		r.Post("/query", srv.ServeHTTP)
 	})
 
