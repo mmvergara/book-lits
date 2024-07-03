@@ -54,6 +54,8 @@ func (r *mutationResolver) CreatePublisher(ctx context.Context, data model.Creat
 
 // UpdatePublisher is the resolver for the updatePublisher field.
 func (r *mutationResolver) UpdatePublisher(ctx context.Context, id string, data model.UpdatePublisherInput) (*model.Publisher, error) {
+	// user := auth.ForContext(ctx)
+
 	log.Println("UpdatePublisher")
 	panic(fmt.Errorf("not implemented: UpdatePublisher - updatePublisher"))
 }
@@ -97,12 +99,22 @@ func (r *mutationResolver) CreateBook(ctx context.Context, data model.CreateBook
 }
 
 // UpdateBook is the resolver for the updateBook field.
-func (r *mutationResolver) UpdateBook(ctx context.Context, id string, data model.UpdateBookInput) (*model.Book, error) {
-	log.Println("UpdateBook")
-	panic(fmt.Errorf("not implemented: UpdateBook - updateBook"))
-}
+func (r *mutationResolver) UpdateBook(ctx context.Context, data model.UpdateBookInput) (*model.Book, error) {
+	user := auth.ForContext(ctx)
+	log.Println("Update Book 📖")
+	if user.ID.String() != data.AuthorID {
+		return nil, fmt.Errorf("Unauthorized")
+	}
 
-// 🍑🥭🍍🥥🥝🍅🍆🥑🫛🥦
+	bookID, err := uuid.Parse(data.BookID)
+	if err != nil {
+		return nil, err
+	}
+
+	updatedBook, err := r.Repo.UpdateBookName(bookID, data.Name)
+
+	return &updatedBook, err
+}
 
 // DeleteBook is the resolver for the deleteBook field.
 func (r *mutationResolver) DeleteBook(ctx context.Context, id string) (*model.Book, error) {

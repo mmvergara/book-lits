@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { gql } from "../../__generated__";
+import { useMutation } from "@apollo/client";
 
 interface BookCardProps {
   id: string;
@@ -12,15 +14,44 @@ interface BookCardProps {
   onUpdate?: (id: string, newName: string) => void;
 }
 
+const UPDATE_BOOK = gql(`
+  mutation UpdateBook($data: UpdateBookInput!) {
+    updateBook(data: $data) {
+      id
+      name
+      createdAt
+      author {
+        id
+        name
+      }
+      publisher {
+        id
+        name
+      }
+    }
+  }`);
+
 const BookCard = ({ onUpdate, ...book }: BookCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(book.name);
+
+  const [updateBook, { error }] = useMutation(UPDATE_BOOK);
 
   const handleEdit = () => {
     setIsEditing(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    await updateBook({
+      variables: {
+        data: {
+          bookId: book.id,
+          authorId: book.authorId,
+          publisherId: book.publisherId,
+          name: editedName,
+        },
+      },
+    });
     if (onUpdate) {
       onUpdate(book.id, editedName);
     }
@@ -32,8 +63,14 @@ const BookCard = ({ onUpdate, ...book }: BookCardProps) => {
     setIsEditing(false);
   };
 
+  useEffect(() => {
+    if (error) {
+      console.log(error.message);
+    }
+  }, [error]);
+
   return (
-    <div className="flex flex-col bg-zinc-800 p-6 h-[280px] overflow-hidden rounded-lg shadow-md transition-all duration-300 hover:bg-zinc-700 hover:shadow-xl max-w-[350px] w-full">
+    <div className="flex flex-col bg-zinc-800 p-6 h-[280px] overflow-hidden rounded-lg shadow-md transition-all duration-300 hover:bg-zinc-900 hover:shadow-xl max-w-[350px] w-full">
       {isEditing ? (
         <div className="mb-4">
           <input

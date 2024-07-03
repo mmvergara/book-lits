@@ -6,7 +6,7 @@ const Navbar = ({ children }: { children: React.ReactNode }) => {
       <div className="navbar bg-base-100">
         <div className="flex-1">
           <Link to="/" className="btn btn-ghost text-xl">
-            BooklIts
+            Book Lits 📚
           </Link>
         </div>
         <div className="flex-none">

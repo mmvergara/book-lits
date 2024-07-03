@@ -43,7 +43,7 @@ type Mutation {
   deletePublisher(id: ID!): Publisher!
 
   createBook(data: CreateBookInput!): Book!
-  updateBook(id: ID!, data: UpdateBookInput!): Book!
+  updateBook(data: UpdateBookInput!): Book!
   deleteBook(id: ID!): Book!
 }
 
@@ -63,7 +63,8 @@ input CreateBookInput {
 }
 
 input UpdateBookInput {
-  name: String
-  authorId: ID
-  publisherId: ID
+  bookId: ID!
+  name: String!
+  authorId: ID!
+  publisherId: ID!
 }
