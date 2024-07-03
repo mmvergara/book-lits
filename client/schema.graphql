@@ -1,0 +1,69 @@
+scalar DateTime
+
+type User {
+  id: ID!
+  name: String!
+  # Add other relevant user fields (e.g., email, role)
+  createdAt: DateTime!
+}
+
+type Publisher {
+  id: ID!
+  name: String!
+  createdAt: DateTime!
+
+  ownerId: ID!
+  owner: User!
+  books: [Book!]!
+}
+
+type Book {
+  id: ID!
+  name: String!
+  createdAt: DateTime!
+
+  author: User!
+  publisher: Publisher!
+}
+
+type Query {
+  users: [User!]!
+  user(id: ID!): User
+
+  publishers: [Publisher!]!
+  publisher(id: ID!): Publisher
+
+  books: [Book!]!
+  book(id: ID!): Book
+}
+
+type Mutation {
+  createPublisher(data: CreatePublisherInput!): Publisher!
+  updatePublisher(id: ID!, data: UpdatePublisherInput!): Publisher!
+  deletePublisher(id: ID!): Publisher!
+
+  createBook(data: CreateBookInput!): Book!
+  updateBook(id: ID!, data: UpdateBookInput!): Book!
+  deleteBook(id: ID!): Book!
+}
+
+input CreatePublisherInput {
+  name: String!
+  ownerId: ID!
+}
+
+input UpdatePublisherInput {
+  name: String
+}
+
+input CreateBookInput {
+  name: String!
+  authorId: ID!
+  publisherId: ID!
+}
+
+input UpdateBookInput {
+  name: String
+  authorId: ID
+  publisherId: ID
+}
