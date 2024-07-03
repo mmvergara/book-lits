@@ -66,7 +66,7 @@ const BooksPage = () => {
           <p className="mt-2">{error.message}</p>
         </div>
       ) : (
-        <div className="flex gap-4 flex-wrap p-8 items-center mt-4">
+        <div className="flex gap-4 flex-wrap justify-center p-8 items-center mt-4">
           {data?.books.map((book: any) => (
             <BookCard
               key={book.id}

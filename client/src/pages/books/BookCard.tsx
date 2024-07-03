@@ -1,4 +1,3 @@
-import { gql } from "@apollo/client";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -12,7 +11,6 @@ interface BookCardProps {
   authorId: string;
   onUpdate?: (id: string, newName: string) => void;
 }
-
 
 const BookCard = ({ onUpdate, ...book }: BookCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
