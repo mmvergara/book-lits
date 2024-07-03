@@ -3,7 +3,7 @@ import CreatePublisher from "./CreatePublisher";
 import { Link } from "react-router-dom";
 
 const query = gql`
-  query GetPublisher {
+  query GetPublishers {
     publishers {
       id
       name
