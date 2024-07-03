@@ -5,7 +5,6 @@ import SignUpPage from "../pages/auth/SignUpPage.tsx";
 import NotFoundPage from "../pages/404Page.tsx";
 import AuthProtectedRoute from "./AuthProtectedRoute.tsx";
 import Providers from "../Providers.tsx";
-import ProtectedPage from "../pages/protected/ProtectedPage.tsx";
 import BooksPage from "../pages/books/BooksPage.tsx";
 import PublishersPage from "../pages/publishers/PublishersPage.tsx";
 import BookPage from "../pages/books/[bookid]/BookPage.tsx";
@@ -35,10 +34,6 @@ const router = createBrowserRouter([
         path: "/",
         element: <AuthProtectedRoute />,
         children: [
-          {
-            path: "/protected",
-            element: <ProtectedPage />,
-          },
           {
             path: "/books",
             element: <BooksPage />,

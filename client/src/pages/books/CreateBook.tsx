@@ -22,7 +22,7 @@ const CREATE_BOOK = gql`
 `;
 
 const PUBLISHERS = gql`
-  query GetPublishers {
+  query GetListOfPublishers {
     publishers {
       id
       name

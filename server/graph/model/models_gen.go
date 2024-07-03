@@ -20,9 +20,10 @@ type Query struct {
 }
 
 type UpdateBookInput struct {
-	Name        *string `json:"name,omitempty"`
-	AuthorID    *string `json:"authorId,omitempty"`
-	PublisherID *string `json:"publisherId,omitempty"`
+	BookID      string `json:"bookId"`
+	Name        string `json:"name"`
+	AuthorID    string `json:"authorId"`
+	PublisherID string `json:"publisherId"`
 }
 
 type UpdatePublisherInput struct {
