@@ -39,7 +39,7 @@ const CreateBook = () => {
   const [selectedPublisher, setSelectedPublisher] = useState("");
   const [bookName, setBookName] = useState("");
   const { loading, error, data } = useQuery(PUBLISHERS);
-  const [createBook] = useMutation(CREATE_BOOK);
+  const [createBook, { data: newBook }] = useMutation(CREATE_BOOK);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -70,8 +70,9 @@ const CreateBook = () => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-4 bg-zinc-800 p-6 rounded-lg shadow-md max-w-[350px] w-full"
+      className="flex flex-col gap-2 bg-zinc-800 p-6 rounded-lg shadow-md h-[280px] max-w-[350px] w-full"
     >
+      <h2 className="text-xl text-white font-semibold">Create New Book</h2>
       <input
         type="text"
         className="bg-zinc-700 text-zinc-100 border border-zinc-600 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all duration-300"
@@ -99,6 +100,7 @@ const CreateBook = () => {
       >
         Create Book
       </button>
+      {newBook && <p>Book created successfully!</p>}
     </form>
   );
 };
