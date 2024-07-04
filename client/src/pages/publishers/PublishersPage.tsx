@@ -2,6 +2,9 @@ import { useQuery } from "@apollo/client";
 import CreatePublisher from "./CreatePublisher";
 import { Link } from "react-router-dom";
 import { gql } from "../../__generated__";
+import Throbber from "../../components/Throbber";
+import { useEffect } from "react";
+import { toast } from "react-toastify";
 
 const query = gql(`
   query GetPublishers {
@@ -15,15 +18,17 @@ const query = gql(`
 
 const PublishersPage = () => {
   const { loading, error, data } = useQuery(query);
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error.message}</p>;
-  console.log(data);
+  useEffect(() => {
+    if (error) toast.error(error.message);
+  }, [error]);
+  if (loading) return <Throbber />;
+  if (!data?.publishers) return <></>;
   return (
     <main className="flex justify-center items-center flex-col">
       <h1 className="text-3xl mb-2">Publishers Page</h1>
       <CreatePublisher />
-      <section className="flex flex-wrap justify-center items-center gap-4 w-full"> 
-        {data?.publishers.map((publisher: any) => (
+      <section className="flex flex-wrap justify-center items-center gap-4 w-full">
+        {data.publishers.map((publisher: any) => (
           <Link
             to={`/publishers/${publisher.id}`}
             key={publisher.id}

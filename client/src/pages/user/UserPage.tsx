@@ -4,6 +4,7 @@ import Throbber from "../../components/Throbber";
 import { gql } from "../../__generated__";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
+import { limitWord } from "../../utils/limitWord";
 
 const GET_USER = gql(`
   query GetUser($userid: UUID!) {
@@ -48,7 +49,7 @@ const UserPage = () => {
 
       <section className="mb-8">
         <h2 className="text-3xl font-semibold mb-6 text-gray-200">
-          Publishers
+          Owned Publishers
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {data.user.publishers.map((publisher) => (
@@ -59,7 +60,7 @@ const UserPage = () => {
             >
               <span className="text-3xl mr-3">🏢</span>
               <h3 className="text-xl font-semibold text-purple-300">
-                {publisher.name}
+                {limitWord(publisher.name, 10)}
               </h3>
             </Link>
           ))}
@@ -82,7 +83,7 @@ const UserPage = () => {
             >
               <span className="text-3xl mr-3">📘</span>
               <h3 className="text-xl font-semibold text-purple-300">
-                {book.name}
+                {limitWord(book.name, 10)}
               </h3>
             </Link>
           ))}

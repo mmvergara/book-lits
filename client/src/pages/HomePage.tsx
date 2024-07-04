@@ -9,30 +9,34 @@ const HomePage = () => {
         <h1 className="header-text text-3xl">Book Lits 📚</h1>
         <p>Good Day! {user?.username || "None"}</p>
         <div className="flex flex-wrap items-center justify-center gap-2">
-          <Link className="btn" to={`/user${user?.userid}`}>
-            View Profile
-          </Link>
-          <Link className="btn" to="/books">
-            View Books
-          </Link>
-          <Link className="btn" to="/publishers">
-            View Publishers
-          </Link>
+          {user && (
+            <>
+              <Link className="btn" to={`/user/${user?.userid}`}>
+                View Profile
+              </Link>
+              <Link className="btn" to="/books">
+                View Books
+              </Link>
+              <Link className="btn" to="/publishers">
+                View Publishers
+              </Link>
+            </>
+          )}
+          {user ? (
+            <button
+              className="btn text-red-600"
+              onClick={() => {
+                if (signOut) signOut();
+              }}
+            >
+              Sign Out
+            </button>
+          ) : (
+            <Link className="btn" to="/auth/sign-in">
+              Sign In
+            </Link>
+          )}
         </div>
-        {user ? (
-          <button
-            className="btn"
-            onClick={() => {
-              if (signOut) signOut();
-            }}
-          >
-            Sign Out
-          </button>
-        ) : (
-          <Link className="btn" to="/auth/sign-in">
-            Sign In
-          </Link>
-        )}
       </section>
     </main>
   );
