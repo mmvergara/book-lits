@@ -51,7 +51,6 @@ func (a *AuthHandler) getIdAndNameFromToken(token *jwt.Token) (uuid.UUID, string
 	if err != nil {
 		return nilUUID, "", fmt.Errorf("invalid token claims")
 	}
-	log.Println("From getIdAndNameFromToken: ", uid, username)
 	return uid, username, nil
 }
 

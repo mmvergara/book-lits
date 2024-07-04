@@ -5,10 +5,13 @@ const HomePage = () => {
   const { user, signOut } = useUser();
   return (
     <main className="flex justify-center items-center h-[80vh]">
-      <section className="flex items-center justify-center flex-col gap-2 bg-zinc-800 max-w-[400px] w-full p-10">
+      <section className="flex items-center justify-center flex-col gap-2 bg-zinc-800 max-w-[700px] w-full p-10">
         <h1 className="header-text text-3xl">Book Lits 📚</h1>
         <p>Good Day! {user?.username || "None"}</p>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <Link className="btn" to={`/user${user?.userid}`}>
+            View Profile
+          </Link>
           <Link className="btn" to="/books">
             View Books
           </Link>

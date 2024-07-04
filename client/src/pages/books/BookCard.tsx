@@ -4,6 +4,7 @@ import { gql } from "../../__generated__";
 import { useMutation } from "@apollo/client";
 import { GetBookQuery } from "../../__generated__/graphql";
 import { toast } from "react-toastify";
+import { limitWord } from "../../utils/limitWord";
 
 interface BookCardProps {
   book: GetBookQuery["book"];
@@ -43,10 +44,11 @@ const BookCard = ({ book: initialBook }: BookCardProps) => {
       setIsEditing(false);
       return;
     }
+
     await updateBook({
       variables: {
         data: {
-          bookId: book?.name,
+          bookId: book?.id,
           authorId: book.author.id,
           publisherId: book.publisher.id,
           name: editedName,
@@ -96,11 +98,11 @@ const BookCard = ({ book: initialBook }: BookCardProps) => {
       ) : (
         <div className="flex justify-between items-start mb-4">
           <h2 className="text-2xl font-semibold text-purple-300">
-            📗 {book.name}
+            📗 {limitWord(book.name, 10)}
           </h2>
           <button
             onClick={handleEdit}
-            className="text-zinc-400 hover:text-purple-300"
+            className="text-zinc-400 hover:text-purple-300 p-2 hover:bg-zinc-700 rounded transition-colors duration-200"
           >
             ✏️
           </button>

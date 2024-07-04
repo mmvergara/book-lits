@@ -6,6 +6,8 @@ type User {
   name: String!
   # Add other relevant user fields (e.g., email, role)
   createdAt: DateTime!
+  books: [Book!]!
+  publishers: [Publisher!]!
 }
 
 type Publisher {

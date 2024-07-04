@@ -18,19 +18,25 @@ const (
 
 // Loaders wrap your data loaders to inject via middleware
 type Loaders struct {
-	UserLoader      *dataloadgen.Loader[model.UserID, *model.User]
-	BookLoader      *dataloadgen.Loader[model.BookID, *model.Book]
-	PublisherLoader *dataloadgen.Loader[model.PublisherID, *model.Publisher]
-	Repo            *repo.Supabase
+	UserLoader             *dataloadgen.Loader[model.UserID, *model.User]
+	BookLoader             *dataloadgen.Loader[model.BookID, *model.Book]
+	BookByAuthorLoader     *dataloadgen.Loader[model.UserID, []*model.Book]
+	PublisherLoader        *dataloadgen.Loader[model.PublisherID, *model.Publisher]
+	PublisherByOwnerLoader *dataloadgen.Loader[model.UserID, []*model.Publisher]
+
+	Repo *repo.Supabase
 }
 
 // NewLoaders instantiates data loaders for the middleware
 func NewLoaders(repo *repo.Supabase) *Loaders {
 	return &Loaders{
-		UserLoader:      dataloadgen.NewLoader(repo.GetUsersByIDs, dataloadgen.WithWait(time.Millisecond)),
-		BookLoader:      dataloadgen.NewLoader(repo.GetBooksByIDs, dataloadgen.WithWait(time.Millisecond)),
-		PublisherLoader: dataloadgen.NewLoader(repo.GetPublisherByIDs, dataloadgen.WithWait(time.Millisecond)),
-		Repo:            repo,
+		UserLoader:             dataloadgen.NewLoader(repo.GetUsersByIDs, dataloadgen.WithWait(time.Millisecond)),
+		BookLoader:             dataloadgen.NewLoader(repo.GetBooksByIDs, dataloadgen.WithWait(time.Millisecond)),
+		BookByAuthorLoader:     dataloadgen.NewLoader(repo.GetBooksByAuthorIDs, dataloadgen.WithWait(time.Millisecond)),
+		PublisherLoader:        dataloadgen.NewLoader(repo.GetPublisherByIDs, dataloadgen.WithWait(time.Millisecond)),
+		PublisherByOwnerLoader: dataloadgen.NewLoader(repo.GetPublisherByOwnerIDs, dataloadgen.WithWait(time.Millisecond)),
+
+		Repo: repo,
 	}
 }
 

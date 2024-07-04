@@ -60,7 +60,6 @@ func main() {
 		r.Post("/auth/signin", http.HandlerFunc(authHandler.SignInHandler))
 		r.Post("/auth/signup", http.HandlerFunc(authHandler.SignUpHandler))
 		r.Post("/auth/signout", http.HandlerFunc(authHandler.SignOutHandler))
-
 	})
 
 	router.Group(func(r chi.Router) {

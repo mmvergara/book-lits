@@ -1,6 +1,8 @@
 import { gql, useMutation, useQuery } from "@apollo/client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useUser } from "../../context/AuthContext";
+import Throbber from "../../components/Throbber";
+import { toast } from "react-toastify";
 
 const CREATE_BOOK = gql`
   mutation CreateBook($name: String!, $authorId: UUID!, $publisherId: UUID!) {
@@ -63,9 +65,10 @@ const CreateBook = () => {
       console.error(error);
     }
   };
-
-  if (loading) return <p>Loading...</p>;
-  if (error) return <>Error : {error.message}</>;
+  useEffect(() => {
+    if (error) toast.error(error.message);
+  }, [error]);
+  if (loading) return <Throbber />;
 
   return (
     <form

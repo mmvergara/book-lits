@@ -9,6 +9,7 @@ import BooksPage from "../pages/books/BooksPage.tsx";
 import PublishersPage from "../pages/publishers/PublishersPage.tsx";
 import BookPage from "../pages/books/[bookid]/BookPage.tsx";
 import PublisherPage from "../pages/publishers/[publisherid]/PublisherPage.tsx";
+import UserPage from "../pages/user/UserPage.tsx";
 
 const router = createBrowserRouter([
   // I recommend you reflect the routes here in the pages folder
@@ -34,6 +35,10 @@ const router = createBrowserRouter([
         path: "/",
         element: <AuthProtectedRoute />,
         children: [
+          {
+            path: "/user/:userid",
+            element: <UserPage />,
+          },
           {
             path: "/books",
             element: <BooksPage />,

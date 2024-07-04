@@ -21,6 +21,7 @@ const documents = {
     "\n  mutation CreatePublisher($data: CreatePublisherInput!) {\n    createPublisher(data: $data) {\n      id\n      name\n    }\n  }\n": types.CreatePublisherDocument,
     "\n  query GetPublishers {\n    publishers {\n      id\n      name\n      createdAt\n    }\n  }\n": types.GetPublishersDocument,
     "\n  query GetPublisher($publisherid: UUID!) {\n    publisher(id: $publisherid) {\n      id\n      name\n      createdAt\n      books {\n        id\n        name\n        author {\n          name\n        }\n      }\n    }\n  }\n": types.GetPublisherDocument,
+    "\n  query GetUser($userid: UUID!) {\n    user(id: $userid) {\n      id\n      name\n      publishers {\n        id\n        name\n      }\n      books {\n        id\n        name\n      }\n    }\n  }\n": types.GetUserDocument,
 };
 
 /**
@@ -69,6 +70,10 @@ export function gql(source: "\n  query GetPublishers {\n    publishers {\n      
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function gql(source: "\n  query GetPublisher($publisherid: UUID!) {\n    publisher(id: $publisherid) {\n      id\n      name\n      createdAt\n      books {\n        id\n        name\n        author {\n          name\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query GetPublisher($publisherid: UUID!) {\n    publisher(id: $publisherid) {\n      id\n      name\n      createdAt\n      books {\n        id\n        name\n        author {\n          name\n        }\n      }\n    }\n  }\n"];
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(source: "\n  query GetUser($userid: UUID!) {\n    user(id: $userid) {\n      id\n      name\n      publishers {\n        id\n        name\n      }\n      books {\n        id\n        name\n      }\n    }\n  }\n"): (typeof documents)["\n  query GetUser($userid: UUID!) {\n    user(id: $userid) {\n      id\n      name\n      publishers {\n        id\n        name\n      }\n      books {\n        id\n        name\n      }\n    }\n  }\n"];
 
 export function gql(source: string) {
   return (documents as any)[source] ?? {};

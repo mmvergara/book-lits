@@ -1,7 +1,11 @@
-import { gql, useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client";
 import { Link, useParams } from "react-router-dom";
+import Throbber from "../../../components/Throbber";
+import { gql } from "../../../__generated__";
+import { useEffect } from "react";
+import { toast } from "react-toastify";
 
-const GET_PUBLISHER = gql`
+const GET_PUBLISHER = gql(`
   query GetPublisher($publisherid: UUID!) {
     publisher(id: $publisherid) {
       id
@@ -16,55 +20,27 @@ const GET_PUBLISHER = gql`
       }
     }
   }
-`;
+`);
 
 const PublisherPage = () => {
   const params = useParams();
   const { loading, error, data } = useQuery(GET_PUBLISHER, {
     variables: { publisherid: params.publisherid },
   });
+  useEffect(() => {
+    if (error) toast.error(error.message);
+  }, [error]);
+
   if (loading) {
-    return (
-      <div className="p-8 max-w-4xl mx-auto bg-zinc-9800 rounded-lg shadow-lg text-gray-100">
-        <div className="loading-container flex justify-center items-center h-full">
-          <div
-            className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full border-purple-400"
-            role="status"
-          >
-            <span className="sr-only">Loading Publisher Details...</span>
-          </div>
-        </div>
-      </div>
-    );
+    return <Throbber />;
   }
 
-  if (error) {
-    return (
-      <div className="p-8 max-w-4xl mx-auto bg-zinc-9800 rounded-lg shadow-lg text-gray-100">
-        <div className="error-container flex items-center justify-center h-full bg-zinc-700 bg-opacity-10 rounded-lg">
-          <div className="flex items-center mr-4">
-            <svg
-              className="w-6 h-6 text-purple-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 8v-3m0 16V5m0 8v8"
-              />
-            </svg>
-          </div>
-          <p className="text-xl text-gray-100">{error.message}</p>
-        </div>
-      </div>
-    );
+  if (!data?.publisher) {
+    return <></>;
   }
+
   return (
-    <div className="p-8 max-w-4xl mx-auto bg-zinc-9800 rounded-lg shadow-lg text-gray-100">
+    <div className="p-8 max-w-4xl mx-auto bg-zinc-900 rounded-lg shadow-lg text-gray-100">
       <header className="mb-8 border-b border-zinc-700 pb-4">
         <h1 className="text-4xl font-bold text-purple-400">
           {data.publisher.name}

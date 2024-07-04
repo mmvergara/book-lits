@@ -15,11 +15,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// ID is the resolver for the id field.
-func (r *bookResolver) ID(ctx context.Context, obj *model.Book) (uuid.UUID, error) {
-	return uuid.UUID(obj.ID), nil
-}
-
 // Author is the resolver for the author field.
 func (r *bookResolver) Author(ctx context.Context, obj *model.Book) (*model.User, error) {
 	// Get Author by BookID
@@ -107,15 +102,18 @@ func (r *mutationResolver) CreateBook(ctx context.Context, data model.CreateBook
 
 // UpdateBook is the resolver for the updateBook field.
 func (r *mutationResolver) UpdateBook(ctx context.Context, data model.UpdateBookInput) (*model.Book, error) {
-	log.Println("Update Book")
-
+	log.Println("Update Book Name")
 	user := auth.ForContext(ctx)
+	log.Println(user.ID)
+	log.Println(data.AuthorID)
 	if user.ID != data.AuthorID {
 		return nil, fmt.Errorf("Unauthorized")
 	}
 
 	updatedBook, err := r.Repo.UpdateBookName(model.BookID(data.BookID), data.Name)
-
+	if err != nil {
+		return nil, err
+	}
 	return &updatedBook, err
 }
 
@@ -125,16 +123,6 @@ func (r *mutationResolver) DeleteBook(ctx context.Context, id uuid.UUID) (*model
 
 	deletedBook, err := r.Repo.DeleteBook(model.BookID(id))
 	return &deletedBook, err
-}
-
-// ID is the resolver for the id field.
-func (r *publisherResolver) ID(ctx context.Context, obj *model.Publisher) (uuid.UUID, error) {
-	return uuid.UUID(obj.ID), nil
-}
-
-// OwnerID is the resolver for the ownerId field.
-func (r *publisherResolver) OwnerID(ctx context.Context, obj *model.Publisher) (uuid.UUID, error) {
-	return uuid.UUID(obj.OwnerID), nil
 }
 
 // Owner is the resolver for the owner field.
@@ -150,7 +138,7 @@ func (r *publisherResolver) Owner(ctx context.Context, obj *model.Publisher) (*m
 
 // Books is the resolver for the books field.
 func (r *publisherResolver) Books(ctx context.Context, obj *model.Publisher) ([]*model.Book, error) {
-	log.Println("Get Books by PublisherID")
+	log.Println("Get All Books by PublisherID")
 
 	books, err := r.Repo.GetBooksByPublisherID(obj.ID)
 	if err != nil {
@@ -225,9 +213,26 @@ func (r *queryResolver) Book(ctx context.Context, id uuid.UUID) (*model.Book, er
 	return book, nil
 }
 
-// ID is the resolver for the id field.
-func (r *userResolver) ID(ctx context.Context, obj *model.User) (uuid.UUID, error) {
-	return uuid.UUID(obj.ID), nil
+// Books is the resolver for the books field.
+func (r *userResolver) Books(ctx context.Context, obj *model.User) ([]*model.Book, error) {
+	// Get All Books by AuthorID
+	log.Println("Get All Books by AuthorID 📦")
+	books, err := loaders.For(ctx).BookByAuthorLoader.Load(ctx, model.UserID(obj.ID))
+	if err != nil {
+		return nil, err
+	}
+	return books, nil
+}
+
+// Publishers is the resolver for the publishers field.
+func (r *userResolver) Publishers(ctx context.Context, obj *model.User) ([]*model.Publisher, error) {
+	// Get All Publishers by UserID
+	log.Println("Get All Publishers by UserID 📦")
+	publishers, err := loaders.For(ctx).PublisherByOwnerLoader.Load(ctx, model.UserID(obj.ID))
+	if err != nil {
+		return nil, err
+	}
+	return publishers, nil
 }
 
 // Book returns BookResolver implementation.
