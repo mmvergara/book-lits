@@ -2,7 +2,7 @@ import { gql, useQuery } from "@apollo/client";
 import { Link, useParams } from "react-router-dom";
 
 const GET_PUBLISHER = gql`
-  query GetPublisher($publisherid: ID!) {
+  query GetPublisher($publisherid: UUID!) {
     publisher(id: $publisherid) {
       id
       name

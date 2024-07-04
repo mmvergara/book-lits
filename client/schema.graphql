@@ -1,24 +1,25 @@
 scalar DateTime
+scalar UUID
 
 type User {
-  id: ID!
+  id: UUID!
   name: String!
   # Add other relevant user fields (e.g., email, role)
   createdAt: DateTime!
 }
 
 type Publisher {
-  id: ID!
+  id: UUID!
   name: String!
   createdAt: DateTime!
 
-  ownerId: ID!
+  ownerId: UUID!
   owner: User!
   books: [Book!]!
 }
 
 type Book {
-  id: ID!
+  id: UUID!
   name: String!
   createdAt: DateTime!
 
@@ -28,28 +29,28 @@ type Book {
 
 type Query {
   users: [User!]!
-  user(id: ID!): User
+  user(id: UUID!): User
 
   publishers: [Publisher!]!
-  publisher(id: ID!): Publisher
+  publisher(id: UUID!): Publisher
 
   books: [Book!]!
-  book(id: ID!): Book
+  book(id: UUID!): Book
 }
 
 type Mutation {
   createPublisher(data: CreatePublisherInput!): Publisher!
-  updatePublisher(id: ID!, data: UpdatePublisherInput!): Publisher!
-  deletePublisher(id: ID!): Publisher!
+  updatePublisher(id: UUID!, data: UpdatePublisherInput!): Publisher!
+  deletePublisher(id: UUID!): Publisher!
 
   createBook(data: CreateBookInput!): Book!
   updateBook(data: UpdateBookInput!): Book!
-  deleteBook(id: ID!): Book!
+  deleteBook(id: UUID!): Book!
 }
 
 input CreatePublisherInput {
   name: String!
-  ownerId: ID!
+  ownerId: UUID!
 }
 
 input UpdatePublisherInput {
@@ -58,13 +59,13 @@ input UpdatePublisherInput {
 
 input CreateBookInput {
   name: String!
-  authorId: ID!
-  publisherId: ID!
+  authorId: UUID!
+  publisherId: UUID!
 }
 
 input UpdateBookInput {
-  bookId: ID!
+  bookId: UUID!
   name: String!
-  authorId: ID!
-  publisherId: ID!
+  authorId: UUID!
+  publisherId: UUID!
 }

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <svg viewBox="0 0 200 200">
+      <defs>
+        <path id="block-I" d="M 10 10 h 10 v 80 h -10 z" fill="blue" />
+        <path id="block-O" d="M 10 10 h 20 v 20 h -20 z" fill="yellow" />
+        <path
+          id="block-T"
+          d="M 10 10 h 20 v 20 h -10 v 20 h -10 z"
+          fill="purple"
+        />
+        <path
+          id="block-S"
+          d="M 10 10 h 20 v 10 l -10 10 l -10 -10 z"
+          fill="orange"
+        />
+        <path
+          id="block-Z"
+          d="M 10 20 h 10 v 10 l -10 10 l 10 -10 z"
+          fill="red"
+        />
+        <path
+          id="block-J"
+          d="M 10 10 h 20 v 10 l -10 20 l -10 -10 z"
+          fill="teal"
+        />
+        <path
+          id="block-L"
+          d="M 10 10 v 20 h 20 l -10 10 l 10 -10 z"
+          fill="green"
+        />
+      </defs>
+
+      <use xlink:href="#block-I" x="20" y="20" />
+      <use xlink:href="#block-O" x="80" y="20" />
+      <use xlink:href="#block-T" x="140" y="20" />
+      <use xlink:href="#block-S" x="20" y="80" />
+
+      <animateTransform
+        attributeName="transform"
+        attributeType="XML"
+        dur="2s"
+        repeatCount="indefinite"
+        fill="freeze"
+        begin="0s"
+      >
+        <use xlink:href="#block-I" />
+        <animate
+          attributeName="xlink:href"
+          from="#block-I"
+          to="#block-O"
+          dur="0.5s"
+          begin="0s"
+        />
+        <animate
+          attributeName="xlink:href"
+          from="#block-O"
+          to="#block-T"
+          dur="0.5s"
+          begin="0.5s"
+        />
+        <animate
+          attributeName="xlink:href"
+          from="#block-T"
+          to="#block-S"
+          dur="0.5s"
+          begin="1s"
+        />
+        <animate
+          attributeName="xlink:href"
+          from="#block-S"
+          to="#block-Z"
+          dur="0.5s"
+          begin="1.5s"
+        />
+        <animate
+          attributeName="xlink:href"
+          from="#block-Z"
+          to="#block-J"
+          dur="0.5s"
+          begin="2s"
+        />
+        <animate
+          attributeName="xlink:href"
+          from="#block-J"
+          to="#block-L"
+          dur="0.5s"
+          begin="2.5s"
+        />
+        <animate
+          attributeName="xlink:href"
+          from="#block-L"
+          to="#block-I"
+          dur="0.5s"
+          begin="3s"
+        />
+      </animateTransform>
+
+      <use xlink:href="#block-O" x="80" y="20" />
+      <animateTransform
+        attributeName="transform"
+        attributeType="XML"
+        dur="2s"
+        repeatCount="indefinite"
+        fill="freeze"
+        begin="0.5s"
+      >
+        <use xlink:href="#block-O" />
+        <animate
+          attributeName="xlink:href"
+          from="#block-O"
+          to="#block-T"
+          dur="0.5s"
+          begin="0s"
+        />
+      </animateTransform>
+    </svg>
+  </body>
+</html>

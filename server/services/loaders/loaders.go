@@ -18,9 +18,9 @@ const (
 
 // Loaders wrap your data loaders to inject via middleware
 type Loaders struct {
-	UserLoader      *dataloadgen.Loader[string, *model.User]
-	BookLoader      *dataloadgen.Loader[string, *model.Book]
-	PublisherLoader *dataloadgen.Loader[string, *model.Publisher]
+	UserLoader      *dataloadgen.Loader[model.UserID, *model.User]
+	BookLoader      *dataloadgen.Loader[model.BookID, *model.Book]
+	PublisherLoader *dataloadgen.Loader[model.PublisherID, *model.Publisher]
 	Repo            *repo.Supabase
 }
 

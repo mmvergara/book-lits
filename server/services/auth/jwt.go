@@ -5,11 +5,12 @@ import (
 	"log"
 	"time"
 
+	"github.com/go-graph-booklets/server/gqlgen-todos/graph/model"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
-func (a *AuthHandler) createToken(userid uuid.UUID, username string) (string, time.Time, error) {
+func (a *AuthHandler) createToken(userid model.UserID, username string) (string, time.Time, error) {
 	expires := time.Now().Add(time.Hour * 24)
 	log.Println("From createToken: ", userid, username)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,

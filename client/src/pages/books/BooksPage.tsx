@@ -1,27 +1,14 @@
-import { gql, useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client";
 import CreateBook from "./CreateBook";
 import BookCard from "./BookCard";
+import { gql } from "../../__generated__";
 
-type GetBooksQuery = {
-  books: {
-    id: string;
-    name: string;
-    author: {
-      id: string;
-      name: string;
-    };
-    publisher: {
-      id: string;
-      name: string;
-    };
-  }[];
-};
-
-const GET_BOOKS = gql`
+const GET_BOOKS = gql(`
   query GetBooks {
     books {
       id
       name
+      createdAt
       author {
         id
         name
@@ -32,9 +19,9 @@ const GET_BOOKS = gql`
       }
     }
   }
-`;
+`);
 const BooksPage = () => {
-  const { loading, error, data } = useQuery<GetBooksQuery>(GET_BOOKS);
+  const { loading, error, data } = useQuery(GET_BOOKS);
 
   return (
     <main className="flex justify-center items-center flex-col">
@@ -67,17 +54,8 @@ const BooksPage = () => {
       ) : (
         <div className="flex gap-4 flex-wrap justify-center p-8 items-center mt-4">
           <CreateBook />
-          {data?.books.map((book: any) => (
-            <BookCard
-              key={book.id}
-              id={book.id}
-              name={book.name}
-              authorName={book.author.name}
-              authorId={book.author.id}
-              publisher={book.publisher.name}
-              publisherId={book.publisher.id}
-              created_at={book.created_at}
-            />
+          {data?.books.map((book) => (
+            <BookCard book={book} key={book.id} />
           ))}
         </div>
       )}

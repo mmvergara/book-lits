@@ -6,7 +6,6 @@ import (
 	"log"
 
 	"github.com/go-graph-booklets/server/gqlgen-todos/graph/model"
-	"github.com/google/uuid"
 )
 
 func (sp *Supabase) CreateUser(username string, hashedPassword string) (model.User, error) {
@@ -34,7 +33,7 @@ func (sp *Supabase) CreateUser(username string, hashedPassword string) (model.Us
 	return results[0], nil
 }
 
-func (sp *Supabase) DeleteUser(userID uuid.UUID) (model.User, error) {
+func (sp *Supabase) DeleteUser(userID model.UserID) (model.User, error) {
 	var results = []model.User{}
 	err := sp.Client.DB.From("users").Delete().Eq("id", userID.String()).Execute(&results)
 	if err != nil {
@@ -76,10 +75,16 @@ func (sp *Supabase) GetUsers() ([]*model.User, error) {
 	return results, nil
 }
 
-func (sp *Supabase) GetUsersByIDs(ctx context.Context, userIDs []string) ([]*model.User, []error) {
+func (sp *Supabase) GetUsersByIDs(ctx context.Context, userIDs []model.UserID) ([]*model.User, []error) {
 	var results = []*model.User{}
 
-	err := sp.Client.DB.From("users").Select("*").In("id", userIDs).Execute(&results)
+	// convert userIDs to string
+	var userIDsStr []string
+	for _, id := range userIDs {
+		userIDsStr = append(userIDsStr, id.String())
+	}
+
+	err := sp.Client.DB.From("users").Select("*").In("id", userIDsStr).Execute(&results)
 	if err != nil {
 		log.Println("Error getting users by ids")
 		log.Println(err)
@@ -88,7 +93,7 @@ func (sp *Supabase) GetUsersByIDs(ctx context.Context, userIDs []string) ([]*mod
 	return results, nil
 }
 
-func (sp *Supabase) GetUserByID(userID uuid.UUID) (model.User, error) {
+func (sp *Supabase) GetUserByID(userID model.UserID) (model.User, error) {
 	var results = []model.User{}
 	err := sp.Client.DB.From("users").Select("*").Eq("id", userID.String()).Execute(&results)
 	if err != nil {

@@ -1,8 +1,12 @@
 package model
 
+import "github.com/google/uuid"
+
+type PublisherID = uuid.UUID
+
 type Publisher struct {
-	ID        string `json:"id"`
+	ID        PublisherID `json:"id"`
 	Name      string `json:"name"`
 	CreatedAt string `json:"created_at"`
-	OwnerID   string `json:"owner"`
+	OwnerID   UserID `json:"owner"`
 }

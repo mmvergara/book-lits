@@ -5,11 +5,10 @@ import (
 	"log"
 
 	"github.com/go-graph-booklets/server/gqlgen-todos/graph/model"
-	"github.com/google/uuid"
 )
 
 // create publisher
-func (sp *Supabase) CreatePublisher(name string, ownerID uuid.UUID) (model.Publisher, error) {
+func (sp *Supabase) CreatePublisher(name string, ownerID model.PublisherID) (model.Publisher, error) {
 	publisher := &struct {
 		Name  string `json:"name"`
 		Owner string `json:"owner"`
@@ -30,7 +29,7 @@ func (sp *Supabase) CreatePublisher(name string, ownerID uuid.UUID) (model.Publi
 }
 
 // delete publisher
-func (sp *Supabase) DeletePublisher(publisherID uuid.UUID) (model.Publisher, error) {
+func (sp *Supabase) DeletePublisher(publisherID model.PublisherID) (model.Publisher, error) {
 	var results = []model.Publisher{}
 	err := sp.Client.DB.From("publishers").Delete().Eq("id", publisherID.String()).Execute(&results)
 	if err != nil {
@@ -52,7 +51,7 @@ func (sp *Supabase) GetPublishers() ([]*model.Publisher, error) {
 }
 
 // get publisher
-func (sp *Supabase) GetPublisherByID(publisherID uuid.UUID) (model.Publisher, error) {
+func (sp *Supabase) GetPublisherByID(publisherID model.PublisherID) (model.Publisher, error) {
 	var results = []model.Publisher{}
 	err := sp.Client.DB.From("publishers").Select("*").Eq("id", publisherID.String()).Execute(&results)
 	if err != nil {
@@ -63,9 +62,14 @@ func (sp *Supabase) GetPublisherByID(publisherID uuid.UUID) (model.Publisher, er
 }
 
 // get publisher by ids
-func (sp *Supabase) GetPublisherByIDs(ctx context.Context, publisherIDs []string) ([]*model.Publisher, []error) {
+func (sp *Supabase) GetPublisherByIDs(ctx context.Context, publisherIDs []model.PublisherID) ([]*model.Publisher, []error) {
 	var results = []*model.Publisher{}
-	err := sp.Client.DB.From("publishers").Select("*").In("id", publisherIDs).Execute(&results)
+	var PublisherIDsStr = []string{}
+	for _, id := range publisherIDs {
+		PublisherIDsStr = append(PublisherIDsStr, id.String())
+	}
+
+	err := sp.Client.DB.From("publishers").Select("*").In("id", PublisherIDsStr).Execute(&results)
 	if err != nil {
 		return []*model.Publisher{}, []error{err}
 	}
@@ -74,7 +78,7 @@ func (sp *Supabase) GetPublisherByIDs(ctx context.Context, publisherIDs []string
 }
 
 // get publisher by owner id
-func (sp *Supabase) GetPublishersByOwnerID(ownerID uuid.UUID) ([]*model.Publisher, error) {
+func (sp *Supabase) GetPublishersByOwnerID(ownerID model.PublisherID) ([]*model.Publisher, error) {
 	var results = []*model.Publisher{}
 	err := sp.Client.DB.From("publishers").Select("*").Eq("owner", ownerID.String()).Execute(&results)
 	if err != nil {
@@ -82,4 +86,20 @@ func (sp *Supabase) GetPublishersByOwnerID(ownerID uuid.UUID) ([]*model.Publishe
 	}
 
 	return results, nil
+}
+
+// update publisher name by id
+func (sp *Supabase) UpdatePublisherNameByID(publisherID model.PublisherID, name string) (model.Publisher, error) {
+	publisher := &struct {
+		Name string `json:"name"`
+	}{
+		Name: name,
+	}
+	var results = []model.Publisher{}
+	err := sp.Client.DB.From("publishers").Update(publisher).Eq("id", publisherID.String()).Execute(&results)
+	if err != nil {
+		return model.Publisher{}, err
+	}
+
+	return results[0], nil
 }

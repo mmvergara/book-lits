@@ -2,15 +2,19 @@
 
 package model
 
+import (
+	"github.com/google/uuid"
+)
+
 type CreateBookInput struct {
-	Name        string `json:"name"`
-	AuthorID    string `json:"authorId"`
-	PublisherID string `json:"publisherId"`
+	Name        string    `json:"name"`
+	AuthorID    uuid.UUID `json:"authorId"`
+	PublisherID uuid.UUID `json:"publisherId"`
 }
 
 type CreatePublisherInput struct {
-	Name    string `json:"name"`
-	OwnerID string `json:"ownerId"`
+	Name    string    `json:"name"`
+	OwnerID uuid.UUID `json:"ownerId"`
 }
 
 type Mutation struct {
@@ -20,10 +24,10 @@ type Query struct {
 }
 
 type UpdateBookInput struct {
-	BookID      string `json:"bookId"`
-	Name        string `json:"name"`
-	AuthorID    string `json:"authorId"`
-	PublisherID string `json:"publisherId"`
+	BookID      uuid.UUID `json:"bookId"`
+	Name        string    `json:"name"`
+	AuthorID    uuid.UUID `json:"authorId"`
+	PublisherID uuid.UUID `json:"publisherId"`
 }
 
 type UpdatePublisherInput struct {

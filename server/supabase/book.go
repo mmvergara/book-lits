@@ -6,11 +6,10 @@ import (
 	"log"
 
 	"github.com/go-graph-booklets/server/gqlgen-todos/graph/model"
-	"github.com/google/uuid"
 )
 
 // create book
-func (sp *Supabase) CreateBook(name string, publisherID uuid.UUID, authorID uuid.UUID) (model.Book, error) {
+func (sp *Supabase) CreateBook(name string, publisherID model.PublisherID, authorID model.UserID) (model.Book, error) {
 	book := &struct {
 		Name        string `json:"name"`
 		PublisherID string `json:"publisher"`
@@ -35,7 +34,7 @@ func (sp *Supabase) CreateBook(name string, publisherID uuid.UUID, authorID uuid
 }
 
 // delete book
-func (sp *Supabase) DeleteBook(bookID uuid.UUID) (model.Book, error) {
+func (sp *Supabase) DeleteBook(bookID model.BookID) (model.Book, error) {
 	var results = []model.Book{}
 	err := sp.Client.DB.From("books").Delete().Eq("id", bookID.String()).Execute(&results)
 	if err != nil {
@@ -50,7 +49,7 @@ func (sp *Supabase) DeleteBook(bookID uuid.UUID) (model.Book, error) {
 }
 
 // update book name
-func (sp *Supabase) UpdateBookName(bookID uuid.UUID, name string) (model.Book, error) {
+func (sp *Supabase) UpdateBookName(bookID model.BookID, name string) (model.Book, error) {
 	book := model.Book{
 		Name: name,
 	}
@@ -65,7 +64,7 @@ func (sp *Supabase) UpdateBookName(bookID uuid.UUID, name string) (model.Book, e
 }
 
 // get book
-func (sp *Supabase) GetBook(bookID uuid.UUID) (model.Book, error) {
+func (sp *Supabase) GetBook(bookID model.BookID) (model.Book, error) {
 	var results = []model.Book{}
 	err := sp.Client.DB.From("books").Select("*").Eq("id", bookID.String()).Execute(&results)
 	if err != nil {
@@ -88,9 +87,14 @@ func (sp *Supabase) GetBooks() ([]*model.Book, error) {
 	return results, nil
 }
 
-func (sp *Supabase) GetBooksByIDs(ctx context.Context, IDs []string) ([]*model.Book, []error) {
+func (sp *Supabase) GetBooksByIDs(ctx context.Context, IDs []model.BookID) ([]*model.Book, []error) {
 	var results = []*model.Book{}
-	err := sp.Client.DB.From("books").Select("*").In("id", IDs).Execute(&results)
+	var IDsStr = []string{}
+	for _, id := range IDs {
+		IDsStr = append(IDsStr, id.String())
+	}
+
+	err := sp.Client.DB.From("books").Select("*").In("id", IDsStr).Execute(&results)
 	if err != nil {
 		log.Println("Error getting books by ids")
 		log.Println(err)
@@ -101,7 +105,7 @@ func (sp *Supabase) GetBooksByIDs(ctx context.Context, IDs []string) ([]*model.B
 }
 
 // get books by publisher id
-func (sp *Supabase) GetBooksByPublisherID(publisherID uuid.UUID) ([]*model.Book, error) {
+func (sp *Supabase) GetBooksByPublisherID(publisherID model.PublisherID) ([]*model.Book, error) {
 	var results = []*model.Book{}
 	err := sp.Client.DB.From("books").Select("*").Eq("publisher", publisherID.String()).Execute(&results)
 	if err != nil {
@@ -114,7 +118,7 @@ func (sp *Supabase) GetBooksByPublisherID(publisherID uuid.UUID) ([]*model.Book,
 }
 
 // get books by author id
-func (sp *Supabase) GetBooksByAuthorID(authorID uuid.UUID) ([]*model.Book, error) {
+func (sp *Supabase) GetBooksByAuthorID(authorID model.UserID) ([]*model.Book, error) {
 	var results = []*model.Book{}
 	err := sp.Client.DB.From("books").Select("*").Eq("author_id", authorID.String()).Execute(&results)
 	if err != nil {

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useUser } from "../../context/AuthContext";
 
 const CREATE_BOOK = gql`
-  mutation CreateBook($name: String!, $authorId: ID!, $publisherId: ID!) {
+  mutation CreateBook($name: String!, $authorId: UUID!, $publisherId: UUID!) {
     createBook(
       data: { name: $name, authorId: $authorId, publisherId: $publisherId }
     ) {

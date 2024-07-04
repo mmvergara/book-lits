@@ -15,10 +15,16 @@ import (
 	"github.com/google/uuid"
 )
 
+// ID is the resolver for the id field.
+func (r *bookResolver) ID(ctx context.Context, obj *model.Book) (uuid.UUID, error) {
+	return uuid.UUID(obj.ID), nil
+}
+
 // Author is the resolver for the author field.
 func (r *bookResolver) Author(ctx context.Context, obj *model.Book) (*model.User, error) {
 	// Get Author by BookID
-	log.Println("Get Author by BookID")
+	log.Println("Get Author by BookID 📦")
+
 	user, err := loaders.For(ctx).UserLoader.Load(ctx, obj.AuthorID)
 	if err != nil {
 		return nil, err
@@ -28,7 +34,8 @@ func (r *bookResolver) Author(ctx context.Context, obj *model.Book) (*model.User
 
 // Publisher is the resolver for the publisher field.
 func (r *bookResolver) Publisher(ctx context.Context, obj *model.Book) (*model.Publisher, error) {
-	log.Println("Get Publisher by BookID")
+	log.Println("Get Publisher by BookID 📦")
+
 	publisher, err := loaders.For(ctx).PublisherLoader.Load(ctx, obj.PublisherID)
 	if err != nil {
 		return nil, err
@@ -38,12 +45,12 @@ func (r *bookResolver) Publisher(ctx context.Context, obj *model.Book) (*model.P
 
 // CreatePublisher is the resolver for the createPublisher field.
 func (r *mutationResolver) CreatePublisher(ctx context.Context, data model.CreatePublisherInput) (*model.Publisher, error) {
-	log.Println("CreatePublisher 👾")
+	log.Println("Create Publisher")
 	user := auth.ForContext(ctx)
-	if data.OwnerID != user.ID.String() {
+	if data.OwnerID != user.ID {
 		return nil, fmt.Errorf("you can't create a publisher for another user")
 	}
-	newPublisher, err := r.Repo.CreatePublisher(data.Name, user.ID)
+	newPublisher, err := r.Repo.CreatePublisher(data.Name, model.PublisherID(user.ID))
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -53,84 +60,87 @@ func (r *mutationResolver) CreatePublisher(ctx context.Context, data model.Creat
 }
 
 // UpdatePublisher is the resolver for the updatePublisher field.
-func (r *mutationResolver) UpdatePublisher(ctx context.Context, id string, data model.UpdatePublisherInput) (*model.Publisher, error) {
-	// user := auth.ForContext(ctx)
+func (r *mutationResolver) UpdatePublisher(ctx context.Context, id uuid.UUID, data model.UpdatePublisherInput) (*model.Publisher, error) {
+	log.Println("Update Publisher")
+	user := auth.ForContext(ctx)
+	targetPublisher, err := r.Repo.GetPublisherByID(model.PublisherID(id))
 
-	log.Println("UpdatePublisher")
-	panic(fmt.Errorf("not implemented: UpdatePublisher - updatePublisher"))
+	if err != nil {
+		return nil, fmt.Errorf("publisher not found")
+	}
+
+	if targetPublisher.OwnerID != model.UserID(user.ID) {
+		return nil, fmt.Errorf("unauthorized")
+	}
+	publisher, err := r.Repo.UpdatePublisherNameByID(model.PublisherID(id), *data.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &publisher, nil
 }
 
 // DeletePublisher is the resolver for the deletePublisher field.
-func (r *mutationResolver) DeletePublisher(ctx context.Context, id string) (*model.Publisher, error) {
-	log.Println("Delete Publisher By ID 🌶️")
+func (r *mutationResolver) DeletePublisher(ctx context.Context, id uuid.UUID) (*model.Publisher, error) {
+	log.Println("Delete Publisher By ID")
 	user := auth.ForContext(ctx)
-	publisherID, err := uuid.Parse(id)
+	targetPublisher, err := r.Repo.GetPublisherByID(model.PublisherID(id))
 	if err != nil {
 		return nil, err
 	}
 
-	targetPublisher, err := r.Repo.GetPublisherByID(publisherID)
-	if err != nil {
-		return nil, err
-	}
-
-	if targetPublisher.OwnerID != user.ID.String() {
+	if targetPublisher.OwnerID != model.UserID(user.ID) {
 		return nil, fmt.Errorf("Unauthorized")
 	}
 
-	deletedPublisher, err := r.Repo.DeletePublisher(publisherID)
+	deletedPublisher, err := r.Repo.DeletePublisher(targetPublisher.ID)
 	return &deletedPublisher, err
 }
 
 // CreateBook is the resolver for the createBook field.
 func (r *mutationResolver) CreateBook(ctx context.Context, data model.CreateBookInput) (*model.Book, error) {
-	log.Println("CreateBook 📚")
-	publisherUUID, err := uuid.Parse(data.PublisherID)
-	if err != nil {
-		return nil, err
-	}
+	log.Println("Create Book")
 
-	authorUUID, err := uuid.Parse(data.AuthorID)
-	if err != nil {
-		return nil, err
-	}
-	newBook, err := r.Repo.CreateBook(data.Name, publisherUUID, authorUUID)
+	newBook, err := r.Repo.CreateBook(data.Name, model.PublisherID(data.PublisherID), model.UserID(data.AuthorID))
 	return &newBook, err
 }
 
 // UpdateBook is the resolver for the updateBook field.
 func (r *mutationResolver) UpdateBook(ctx context.Context, data model.UpdateBookInput) (*model.Book, error) {
+	log.Println("Update Book")
+
 	user := auth.ForContext(ctx)
-	log.Println("Update Book 📖")
-	if user.ID.String() != data.AuthorID {
+	if user.ID != data.AuthorID {
 		return nil, fmt.Errorf("Unauthorized")
 	}
 
-	bookID, err := uuid.Parse(data.BookID)
-	if err != nil {
-		return nil, err
-	}
-
-	updatedBook, err := r.Repo.UpdateBookName(bookID, data.Name)
+	updatedBook, err := r.Repo.UpdateBookName(model.BookID(data.BookID), data.Name)
 
 	return &updatedBook, err
 }
 
 // DeleteBook is the resolver for the deleteBook field.
-func (r *mutationResolver) DeleteBook(ctx context.Context, id string) (*model.Book, error) {
-	log.Println("Delete Book by ID 🥬")
-	bookID, err := uuid.Parse(id)
-	if err != nil {
-		return nil, err
-	}
+func (r *mutationResolver) DeleteBook(ctx context.Context, id uuid.UUID) (*model.Book, error) {
+	log.Println("Delete Book by ID")
 
-	deletedBook, err := r.Repo.DeleteBook(bookID)
+	deletedBook, err := r.Repo.DeleteBook(model.BookID(id))
 	return &deletedBook, err
+}
+
+// ID is the resolver for the id field.
+func (r *publisherResolver) ID(ctx context.Context, obj *model.Publisher) (uuid.UUID, error) {
+	return uuid.UUID(obj.ID), nil
+}
+
+// OwnerID is the resolver for the ownerId field.
+func (r *publisherResolver) OwnerID(ctx context.Context, obj *model.Publisher) (uuid.UUID, error) {
+	return uuid.UUID(obj.OwnerID), nil
 }
 
 // Owner is the resolver for the owner field.
 func (r *publisherResolver) Owner(ctx context.Context, obj *model.Publisher) (*model.User, error) {
-	log.Println("Get User by PublisherID 🍎")
+	log.Println("Get User by PublisherID 📦")
+
 	user, err := loaders.For(ctx).UserLoader.Load(ctx, obj.OwnerID)
 	if err != nil {
 		return nil, err
@@ -140,13 +150,9 @@ func (r *publisherResolver) Owner(ctx context.Context, obj *model.Publisher) (*m
 
 // Books is the resolver for the books field.
 func (r *publisherResolver) Books(ctx context.Context, obj *model.Publisher) ([]*model.Book, error) {
-	log.Println("Get Books by PublisherID 🍋")
-	publisherID, err := uuid.Parse(obj.ID)
-	if err != nil {
-		return nil, err
-	}
+	log.Println("Get Books by PublisherID")
 
-	books, err := r.Repo.GetBooksByPublisherID(publisherID)
+	books, err := r.Repo.GetBooksByPublisherID(obj.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +161,7 @@ func (r *publisherResolver) Books(ctx context.Context, obj *model.Publisher) ([]
 
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
-	log.Println("Get All Users 🍌")
+	log.Println("Get All Users")
 	users, err := r.Repo.GetUsers()
 	if err != nil {
 		return nil, err
@@ -164,14 +170,9 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 }
 
 // User is the resolver for the user field.
-func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {
-	log.Println("Get User By userID 🍉")
-	userID, err := uuid.Parse(id)
-	if err != nil {
-		return nil, err
-	}
-	log.Println("GetUserById: ", userID)
-	user, err := r.Repo.GetUserByID(userID)
+func (r *queryResolver) User(ctx context.Context, id uuid.UUID) (*model.User, error) {
+	log.Println("Get User By userID")
+	user, err := r.Repo.GetUserByID(model.UserID(id))
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +182,7 @@ func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error
 
 // Publishers is the resolver for the publishers field.
 func (r *queryResolver) Publishers(ctx context.Context) ([]*model.Publisher, error) {
-	log.Println("Get All Publishers 🍇")
+	log.Println("Get All Publishers")
 	publishers, err := r.Repo.GetPublishers()
 	if err != nil {
 		return nil, err
@@ -190,14 +191,10 @@ func (r *queryResolver) Publishers(ctx context.Context) ([]*model.Publisher, err
 }
 
 // Publisher is the resolver for the publisher field.
-func (r *queryResolver) Publisher(ctx context.Context, id string) (*model.Publisher, error) {
-	log.Println("Get Publisher By ID 🍓")
-	publisherID, err := uuid.Parse(id)
-	if err != nil {
-		return nil, err
-	}
+func (r *queryResolver) Publisher(ctx context.Context, id uuid.UUID) (*model.Publisher, error) {
+	log.Println("Get Publisher By ID")
 
-	publisher, err := r.Repo.GetPublisherByID(publisherID)
+	publisher, err := r.Repo.GetPublisherByID(model.PublisherID(id))
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +204,8 @@ func (r *queryResolver) Publisher(ctx context.Context, id string) (*model.Publis
 
 // Books is the resolver for the books field.
 func (r *queryResolver) Books(ctx context.Context) ([]*model.Book, error) {
-	log.Println("Get All Books 🍈")
+	log.Println("Get All Books")
+
 	books, err := r.Repo.GetBooks()
 	if err != nil {
 		return nil, err
@@ -216,14 +214,20 @@ func (r *queryResolver) Books(ctx context.Context) ([]*model.Book, error) {
 }
 
 // Book is the resolver for the book field.
-func (r *queryResolver) Book(ctx context.Context, id string) (*model.Book, error) {
-	log.Println("Get Book By ID 🍒")
-	book, err := loaders.For(ctx).BookLoader.Load(ctx, id)
+func (r *queryResolver) Book(ctx context.Context, id uuid.UUID) (*model.Book, error) {
+	log.Println("Get Book By ID 📦")
+
+	book, err := loaders.For(ctx).BookLoader.Load(ctx, model.BookID(id))
 	if err != nil {
 		return nil, err
 	}
 
 	return book, nil
+}
+
+// ID is the resolver for the id field.
+func (r *userResolver) ID(ctx context.Context, obj *model.User) (uuid.UUID, error) {
+	return uuid.UUID(obj.ID), nil
 }
 
 // Book returns BookResolver implementation.
@@ -238,7 +242,11 @@ func (r *Resolver) Publisher() PublisherResolver { return &publisherResolver{r} 
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+// User returns UserResolver implementation.
+func (r *Resolver) User() UserResolver { return &userResolver{r} }
+
 type bookResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type publisherResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type userResolver struct{ *Resolver }

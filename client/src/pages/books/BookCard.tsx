@@ -2,16 +2,11 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { gql } from "../../__generated__";
 import { useMutation } from "@apollo/client";
+import { GetBookQuery } from "../../__generated__/graphql";
+import { toast } from "react-toastify";
 
 interface BookCardProps {
-  id: string;
-  name: string;
-  publisher: string;
-  publisherId: string;
-  created_at: string;
-  authorName: string;
-  authorId: string;
-  onUpdate?: (id: string, newName: string) => void;
+  book: GetBookQuery["book"];
 }
 
 const UPDATE_BOOK = gql(`
@@ -31,10 +26,11 @@ const UPDATE_BOOK = gql(`
     }
   }`);
 
-const BookCard = ({ onUpdate, ...book }: BookCardProps) => {
+const BookCard = ({ book: initialBook }: BookCardProps) => {
+  const [book, setBook] = useState<GetBookQuery["book"]>(initialBook);
+  if (!book) return <></>;
   const [isEditing, setIsEditing] = useState(false);
-  const [editedName, setEditedName] = useState(book.name);
-
+  const [editedName, setEditedName] = useState(book?.name || "");
   const [updateBook, { error }] = useMutation(UPDATE_BOOK);
 
   const handleEdit = () => {
@@ -42,30 +38,33 @@ const BookCard = ({ onUpdate, ...book }: BookCardProps) => {
   };
 
   const handleSave = async () => {
+    if (!book) return;
+    if (editedName === book.name) {
+      setIsEditing(false);
+      return;
+    }
     await updateBook({
       variables: {
         data: {
-          bookId: book.id,
-          authorId: book.authorId,
-          publisherId: book.publisherId,
+          bookId: book?.name,
+          authorId: book.author.id,
+          publisherId: book.publisher.id,
           name: editedName,
         },
       },
     });
-    if (onUpdate) {
-      onUpdate(book.id, editedName);
-    }
+    setBook({ ...book, name: editedName });
     setIsEditing(false);
   };
 
   const handleCancel = () => {
-    setEditedName(book.name);
+    setEditedName(book?.name || "");
     setIsEditing(false);
   };
 
   useEffect(() => {
     if (error) {
-      console.log(error.message);
+      toast.error(error.message);
     }
   }, [error]);
 
@@ -109,18 +108,18 @@ const BookCard = ({ onUpdate, ...book }: BookCardProps) => {
       )}
       <div className="flex flex-col gap-2">
         <Link
-          to={`/user/${book.authorId}`}
+          to={`/user/${book.author.id}`}
           className="text-sm text-zinc-300 hover:bg-zinc-600 p-2 rounded transition-colors duration-200"
         >
           <span className="font-semibold text-purple-400">Author:</span>{" "}
-          {book.authorName}
+          {book.author.name}
         </Link>
         <Link
-          to={`/publishers/${book.publisherId}`}
+          to={`/publishers/${book.publisher.id}`}
           className="text-sm text-zinc-300 hover:bg-zinc-600 p-2 rounded transition-colors duration-200"
         >
           <span className="font-semibold text-purple-400">Publisher:</span>{" "}
-          {book.publisher}
+          {book.publisher.name}
         </Link>
       </div>
       {!isEditing && (

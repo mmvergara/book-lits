@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/go-graph-booklets/server/gqlgen-todos/graph/model"
 	"github.com/go-graph-booklets/server/gqlgen-todos/tools"
-	"github.com/google/uuid"
 )
 
 type AuthForm struct {
@@ -34,21 +34,16 @@ func (a *AuthHandler) SignInHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	// log.Println(foundUser.Password)
-	// if tools.IsCorrectPassword(u.Password, foundUser.Password) {
-	// 	log.Println("Invalid credentials")
-	// 	w.WriteHeader(http.StatusUnauthorized)
-	// 	json.NewEncoder(w).Encode(map[string]string{"error": "invalid credentials"})
-	// 	return
-	// }
-	parsedFoundUserUUID, err := uuid.Parse(foundUser.ID)
-	if err != nil {
-		log.Println("Could not parse user id")
-		log.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
+	
+	log.Println(foundUser.Password)
+	if tools.IsCorrectPassword(u.Password, foundUser.Password) {
+		log.Println("Invalid credentials !!!!!!!")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "invalid credentials"})
+		return
 	}
 
-	tokenString, exp, err := a.createToken(parsedFoundUserUUID, foundUser.Name)
+	tokenString, exp, err := a.createToken(foundUser.ID, foundUser.Name)
 	if err != nil {
 		log.Println("Internal error Encoding response2")
 		log.Println(err)
@@ -69,18 +64,12 @@ func (a *AuthHandler) SignInHandler(w http.ResponseWriter, r *http.Request) {
 	var res struct {
 		Username string    `json:"username"`
 		Exp      int64     `json:"exp"`
-		UserID   uuid.UUID `json:"userid"`
+		UserID   model.UserID `json:"userid"`
 	}
 	res.Username = foundUser.Name
 	res.Exp = exp.Unix()
+	res.UserID = foundUser.ID
 
-	parsedUserID, err := uuid.Parse(foundUser.ID)
-	if err != nil {
-		log.Println("Internal error Encoding response2")
-		log.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-	res.UserID = parsedUserID
 	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
 		log.Println("Internal error Encoding response2")
