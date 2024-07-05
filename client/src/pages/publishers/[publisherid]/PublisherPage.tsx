@@ -4,6 +4,7 @@ import Throbber from "../../../components/Throbber";
 import { gql } from "../../../__generated__";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
+import { limitWord } from "../../../utils/limitWord";
 
 const GET_PUBLISHER = gql(`
   query GetPublisher($publisherid: UUID!) {
@@ -63,7 +64,7 @@ const PublisherPage = () => {
             <div className="flex items-center mb-4">
               <span className="text-3xl mr-3">📘</span>
               <h3 className="text-xl font-semibold text-purple-300">
-                {book.name}
+                {limitWord(book.name, 10)}
               </h3>
             </div>
             <p className="text-gray-400">by: {book.author.name}</p>
