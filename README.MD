@@ -14,3 +14,12 @@ First project using GraphQL and Apollo. This project is a simple book list app t
 - Apollo with typescript is ❤️
 - Go Chi makes it easy for routing.
 - I need to learn more about cors.
+
+### Screenshots
+
+![ScreenShot](/screenshots/0.png)
+![ScreenShot](/screenshots/1.png)
+![ScreenShot](/screenshots/2.png)
+![ScreenShot](/screenshots/3.png)
+![ScreenShot](/screenshots/4.png)
+![ScreenShot](/screenshots/5.png)
