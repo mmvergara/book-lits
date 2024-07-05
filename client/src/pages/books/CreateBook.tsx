@@ -61,6 +61,7 @@ const CreateBook = () => {
         },
       });
       console.log("Book created!");
+      setBookName("");
     } catch (error) {
       console.error(error);
     }
