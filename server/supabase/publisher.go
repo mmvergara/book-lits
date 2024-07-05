@@ -16,7 +16,6 @@ func (sp *Supabase) CreatePublisher(name string, ownerID model.PublisherID) (mod
 		Name:  name,
 		Owner: ownerID.String(),
 	}
-	log.Println("Creating publisher", publisher)
 	var results = []model.Publisher{}
 	err := sp.Client.DB.From("publishers").Insert(publisher).Execute(&results)
 	if err != nil {
@@ -91,8 +90,6 @@ func (r *Supabase) GetPublisherByOwnerIDs(ctx context.Context, ownerIDs []model.
 	var publishers []*model.Publisher
 	err := r.Client.DB.From("publishers").Select("*").In("owner", ownerIDStrings).Execute(&publishers)
 	if err != nil {
-		log.Println("Error getting publishers by owner ids")
-		log.Println(err)
 		errors = append(errors, err)
 		return results, errors
 	}

@@ -22,7 +22,8 @@ func (r *bookResolver) Author(ctx context.Context, obj *model.Book) (*model.User
 
 	user, err := loaders.For(ctx).UserLoader.Load(ctx, obj.AuthorID)
 	if err != nil {
-		return nil, err
+		log.Println(err)
+		return nil, fmt.Errorf("error getting author")
 	}
 	return user, nil
 }
@@ -33,7 +34,8 @@ func (r *bookResolver) Publisher(ctx context.Context, obj *model.Book) (*model.P
 
 	publisher, err := loaders.For(ctx).PublisherLoader.Load(ctx, obj.PublisherID)
 	if err != nil {
-		return nil, err
+		log.Println(err)
+		return nil, fmt.Errorf("error getting publisher")
 	}
 	return publisher, nil
 }
@@ -48,7 +50,7 @@ func (r *mutationResolver) CreatePublisher(ctx context.Context, data model.Creat
 	newPublisher, err := r.Repo.CreatePublisher(data.Name, model.PublisherID(user.ID))
 	if err != nil {
 		log.Println(err)
-		return nil, err
+		return nil, fmt.Errorf("error creating publisher")
 	}
 
 	return &newPublisher, nil
@@ -69,7 +71,8 @@ func (r *mutationResolver) UpdatePublisher(ctx context.Context, id uuid.UUID, da
 	}
 	publisher, err := r.Repo.UpdatePublisherNameByID(model.PublisherID(id), *data.Name)
 	if err != nil {
-		return nil, err
+		log.Println(err)
+		return nil, fmt.Errorf("error updating publisher")
 	}
 
 	return &publisher, nil
@@ -81,7 +84,8 @@ func (r *mutationResolver) DeletePublisher(ctx context.Context, id uuid.UUID) (*
 	user := auth.ForContext(ctx)
 	targetPublisher, err := r.Repo.GetPublisherByID(model.PublisherID(id))
 	if err != nil {
-		return nil, err
+		log.Println(err)
+		return nil, fmt.Errorf("error getting target publisher")
 	}
 
 	if targetPublisher.OwnerID != model.UserID(user.ID) {
@@ -89,7 +93,11 @@ func (r *mutationResolver) DeletePublisher(ctx context.Context, id uuid.UUID) (*
 	}
 
 	deletedPublisher, err := r.Repo.DeletePublisher(targetPublisher.ID)
-	return &deletedPublisher, err
+	if err != nil {
+		log.Println(err)
+		return nil, fmt.Errorf("error deleting publisher")
+	}
+	return &deletedPublisher, nil
 }
 
 // CreateBook is the resolver for the createBook field.
@@ -97,24 +105,27 @@ func (r *mutationResolver) CreateBook(ctx context.Context, data model.CreateBook
 	log.Println("Create Book")
 
 	newBook, err := r.Repo.CreateBook(data.Name, model.PublisherID(data.PublisherID), model.UserID(data.AuthorID))
-	return &newBook, err
+	if err != nil {
+		log.Println(err)
+		return nil, fmt.Errorf("error creating book")
+	}
+	return &newBook, nil
 }
 
 // UpdateBook is the resolver for the updateBook field.
 func (r *mutationResolver) UpdateBook(ctx context.Context, data model.UpdateBookInput) (*model.Book, error) {
 	log.Println("Update Book Name")
 	user := auth.ForContext(ctx)
-	log.Println(user.ID)
-	log.Println(data.AuthorID)
 	if user.ID != data.AuthorID {
 		return nil, fmt.Errorf("Unauthorized")
 	}
 
 	updatedBook, err := r.Repo.UpdateBookName(model.BookID(data.BookID), data.Name)
 	if err != nil {
-		return nil, err
+		log.Println(err)
+		return nil, fmt.Errorf("error updating book")
 	}
-	return &updatedBook, err
+	return &updatedBook, nil
 }
 
 // DeleteBook is the resolver for the deleteBook field.
@@ -122,7 +133,12 @@ func (r *mutationResolver) DeleteBook(ctx context.Context, id uuid.UUID) (*model
 	log.Println("Delete Book by ID")
 
 	deletedBook, err := r.Repo.DeleteBook(model.BookID(id))
-	return &deletedBook, err
+	if err != nil {
+		log.Println(err)
+		return nil, fmt.Errorf("error deleting book")
+
+	}
+	return &deletedBook, nil
 }
 
 // Owner is the resolver for the owner field.
@@ -131,7 +147,8 @@ func (r *publisherResolver) Owner(ctx context.Context, obj *model.Publisher) (*m
 
 	user, err := loaders.For(ctx).UserLoader.Load(ctx, obj.OwnerID)
 	if err != nil {
-		return nil, err
+		log.Println(err)
+		return nil, fmt.Errorf("error getting owner")
 	}
 	return user, nil
 }
@@ -142,7 +159,8 @@ func (r *publisherResolver) Books(ctx context.Context, obj *model.Publisher) ([]
 
 	books, err := r.Repo.GetBooksByPublisherID(obj.ID)
 	if err != nil {
-		return nil, err
+		log.Println(err)
+		return nil, fmt.Errorf("error getting books")
 	}
 	return books, nil
 }
@@ -152,7 +170,8 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	log.Println("Get All Users")
 	users, err := r.Repo.GetUsers()
 	if err != nil {
-		return nil, err
+		log.Println(err)
+		return nil, fmt.Errorf("error getting users")
 	}
 	return users, nil
 }
@@ -161,8 +180,10 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 func (r *queryResolver) User(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	log.Println("Get User By userID")
 	user, err := r.Repo.GetUserByID(model.UserID(id))
+
 	if err != nil {
-		return nil, err
+		log.Println(err)
+		return nil, fmt.Errorf("error getting user")
 	}
 
 	return &user, nil
@@ -173,7 +194,8 @@ func (r *queryResolver) Publishers(ctx context.Context) ([]*model.Publisher, err
 	log.Println("Get All Publishers")
 	publishers, err := r.Repo.GetPublishers()
 	if err != nil {
-		return nil, err
+		log.Println(err)
+		return nil, fmt.Errorf("error getting publishers")
 	}
 	return publishers, nil
 }
@@ -184,7 +206,8 @@ func (r *queryResolver) Publisher(ctx context.Context, id uuid.UUID) (*model.Pub
 
 	publisher, err := r.Repo.GetPublisherByID(model.PublisherID(id))
 	if err != nil {
-		return nil, err
+		log.Println(err)
+		return nil, fmt.Errorf("error getting publisher")
 	}
 
 	return &publisher, nil
@@ -196,7 +219,8 @@ func (r *queryResolver) Books(ctx context.Context) ([]*model.Book, error) {
 
 	books, err := r.Repo.GetBooks()
 	if err != nil {
-		return nil, err
+		log.Println(err)
+		return nil, fmt.Errorf("error getting books")
 	}
 	return books, nil
 }
@@ -207,7 +231,8 @@ func (r *queryResolver) Book(ctx context.Context, id uuid.UUID) (*model.Book, er
 
 	book, err := loaders.For(ctx).BookLoader.Load(ctx, model.BookID(id))
 	if err != nil {
-		return nil, err
+		log.Println(err)
+		return nil, fmt.Errorf("error getting book")
 	}
 
 	return book, nil
@@ -219,7 +244,8 @@ func (r *userResolver) Books(ctx context.Context, obj *model.User) ([]*model.Boo
 	log.Println("Get All Books by AuthorID 📦")
 	books, err := loaders.For(ctx).BookByAuthorLoader.Load(ctx, model.UserID(obj.ID))
 	if err != nil {
-		return nil, err
+		log.Println(err)
+		return nil, fmt.Errorf("error getting books")
 	}
 	return books, nil
 }
@@ -230,7 +256,8 @@ func (r *userResolver) Publishers(ctx context.Context, obj *model.User) ([]*mode
 	log.Println("Get All Publishers by UserID 📦")
 	publishers, err := loaders.For(ctx).PublisherByOwnerLoader.Load(ctx, model.UserID(obj.ID))
 	if err != nil {
-		return nil, err
+		log.Println(err)
+		return nil, fmt.Errorf("error getting publishers")
 	}
 	return publishers, nil
 }
